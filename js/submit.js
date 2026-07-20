@@ -302,6 +302,13 @@ function _showAlert(html, type) {
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// Keep the date input's max attribute set to today's date (no future dates).
+(function () {
+  const today = new Date().toISOString().split('T')[0];
+  const dateEl = document.getElementById('date_collected');
+  if (dateEl) dateEl.setAttribute('max', today);
+}());
+
 /** Make a bin key safe for use in an HTML id attribute. */
 function _idSafe(key) {
   return key.replace(/[^a-zA-Z0-9_-]/g, '_');

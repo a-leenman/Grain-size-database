@@ -181,7 +181,6 @@ Complete raw data including the full `counts` object for every sample.
 |---|---|---|
 | [Bootstrap](https://getbootstrap.com) | 5.3.2 | Responsive UI |
 | [Leaflet](https://leafletjs.com) | 1.9.4 | Interactive maps |
-| [Leaflet.draw](https://github.com/Leaflet/Leaflet.draw) | 1.0.4 | Draw area-of-interest rectangle |
 | [Chart.js](https://www.chartjs.org) | 4.4.2 | CDF charts |
 
 No build step or Node.js required — the site is pure HTML/CSS/JavaScript.
