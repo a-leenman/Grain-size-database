@@ -81,7 +81,7 @@ function _initCoordInputs() {
       const lng = parseFloat(document.getElementById('lng').value);
       if (!isNaN(lat) && !isNaN(lng)) {
         _setLocation(lat, lng);
-        submitMap.setView([lat, lng], Math.max(submitMap.getZoom(), 10));
+        submitMap.setView([lat, lng], Math.max(submitMap.getZoom(), CONFIG.COORD_INPUT_MIN_ZOOM));
       }
     });
   });

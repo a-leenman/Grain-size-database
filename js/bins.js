@@ -180,16 +180,18 @@ function computeCDF(sample) {
 function getDx(cdf, pct) {
   const { mmValues, pctFiner } = cdf;
   if (!mmValues.length) return null;
+  const precision = (typeof CONFIG !== 'undefined' && CONFIG.DX_PRECISION != null)
+    ? CONFIG.DX_PRECISION : 2;
 
   for (let i = 0; i < pctFiner.length; i++) {
     if (pctFiner[i] >= pct) {
-      if (i === 0) return mmValues[0];
+      if (i === 0) return parseFloat(mmValues[0].toFixed(precision));
       // Linear interpolation in log-mm space
       const logLo = Math.log(mmValues[i - 1]);
       const logHi = Math.log(mmValues[i]);
       const f = (pct - pctFiner[i - 1]) / (pctFiner[i] - pctFiner[i - 1]);
-      return parseFloat(Math.exp(logLo + f * (logHi - logLo)).toFixed(2));
+      return parseFloat(Math.exp(logLo + f * (logHi - logLo)).toFixed(precision));
     }
   }
-  return mmValues[mmValues.length - 1];
+  return parseFloat(mmValues[mmValues.length - 1].toFixed(precision));
 }

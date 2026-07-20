@@ -27,6 +27,9 @@ const CONFIG = {
   MAP_CENTER: [54.0, -2.0],   // UK / Western Europe
   MAP_ZOOM:   5,
 
+  // Minimum zoom applied when the user types coordinates on the submit page.
+  COORD_INPUT_MIN_ZOOM: 10,
+
   // -------------------------------------------------------------------------
   // Marker colour scale (D50 in mm → hue, using a simple blue→red ramp)
   // -------------------------------------------------------------------------
@@ -39,4 +42,9 @@ const CONFIG = {
   CDF_LINE_COLOR:   '#1a6fa8',
   CDF_FILL_COLOR:   'rgba(26,111,168,0.12)',
   CDF_POINT_COLOR:  '#1a6fa8',
+
+  // -------------------------------------------------------------------------
+  // Decimal places used when reporting Dx percentile statistics (mm).
+  // -------------------------------------------------------------------------
+  DX_PRECISION: 2,
 };

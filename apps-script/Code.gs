@@ -22,8 +22,12 @@
  */
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const SHEET_ID   = 'YOUR_GOOGLE_SHEET_ID_HERE';
-const SHEET_NAME = 'Samples';   // Tab name inside the Google Sheet
+const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
+const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
+
+// Decimal places used when writing Dx percentile statistics to the sheet.
+// Must match CONFIG.DX_PRECISION in js/config.js.
+const DX_PRECISION = 2;
 
 // ── Column headers written to the sheet ────────────────────────────────────
 const HEADERS = [
@@ -204,14 +208,14 @@ function _computeStats(sample) {
 function _interpolateDx(mmVals, pctVals, pct) {
   for (let i = 0; i < pctVals.length; i++) {
     if (pctVals[i] >= pct) {
-      if (i === 0) return mmVals[0].toFixed(2);
+      if (i === 0) return mmVals[0].toFixed(DX_PRECISION);
       const logLo = Math.log(mmVals[i - 1]);
       const logHi = Math.log(mmVals[i]);
       const f = (pct - pctVals[i - 1]) / (pctVals[i] - pctVals[i - 1]);
-      return Math.exp(logLo + f * (logHi - logLo)).toFixed(2);
+      return Math.exp(logLo + f * (logHi - logLo)).toFixed(DX_PRECISION);
     }
   }
-  return mmVals[mmVals.length - 1].toFixed(2);
+  return mmVals[mmVals.length - 1].toFixed(DX_PRECISION);
 }
 
 function _generateBoundaries(interval) {
