@@ -5,7 +5,7 @@
  *   • Initialise the Leaflet map and tile layer.
  *   • Load all samples and add a coloured marker for each.
  *   • Build popup content (metadata + mini CDF chart) for each marker.
- *   • Provide Leaflet.draw integration for draw-area-of-interest downloads.
+ *   • Two-click rectangle drawing for area-of-interest download (no plugins needed).
  *   • Wire up the download buttons.
  */
 
@@ -17,8 +17,6 @@
 
 let map;                  // Leaflet map instance
 let markersLayer;         // FeatureGroup holding all sample markers
-let drawControl;          // Leaflet.draw control
-let drawnItems;           // FeatureGroup for the drawn rectangle
 let selectedSamples;      // Samples within the drawn area (or null = all)
 let activePopupCanvas;    // The canvas whose Chart lives in the open popup
 
@@ -48,8 +46,37 @@ function _initMap() {
   // Layer for all sample markers
   markersLayer = L.featureGroup().addTo(map);
 
-  // Layer for the drawn area-of-interest polygon
-  drawnItems = new L.FeatureGroup().addTo(map);
+  // Two-click rectangle drawing – capture map clicks when in draw mode.
+  map.on('click', _onMapClickForDraw);
+}
+
+/**
+ * Handle map clicks while in draw mode.
+ * First click → stores the first corner.
+ * Second click → completes the rectangle and computes area selection.
+ */
+function _onMapClickForDraw(e) {
+  if (!_drawMode) return;
+
+  if (!_firstCorner) {
+    _firstCorner = e.latlng;
+    const hint = document.getElementById('draw-hint');
+    if (hint) hint.textContent = '🎯 Click again to complete the rectangle…';
+  } else {
+    // Second corner – draw the rectangle.
+    const bounds = L.latLngBounds(_firstCorner, e.latlng);
+
+    if (_drawnRect) map.removeLayer(_drawnRect);
+    _drawnRect = L.rectangle(bounds, {
+      color:       '#3388ff',
+      weight:      2,
+      opacity:     0.8,
+      fillOpacity: 0.08,
+    }).addTo(map);
+
+    _cancelDraw();
+    _computeAreaSelection(bounds);
+  }
 }
 
 async function _loadAndRender() {
@@ -212,45 +239,53 @@ function _colorForD50(d50) {
 }
 
 // ---------------------------------------------------------------------------
-// Draw area of interest
+// Draw area of interest  (two-click rectangle – no external dependency)
 // ---------------------------------------------------------------------------
 
+let _drawMode    = false;    // true when the user is drawing a rectangle
+let _firstCorner = null;     // first corner LatLng
+let _drawnRect   = null;     // current L.rectangle layer
+
 /**
- * Toggle Leaflet.draw mode (draw-rectangle).
- * Called by the "Draw Area of Interest" button.
+ * Toggle draw mode on/off.
+ * Called by the "Draw Area of Interest" button in index.html.
  */
 function toggleDrawMode() {
-  if (drawControl) {
-    // Already in draw mode → cancel
-    map.removeControl(drawControl);
-    drawControl = null;
-    drawnItems.clearLayers();
-    selectedSamples = null;
-    document.getElementById('area-download').classList.add('d-none');
+  if (_drawMode) {
+    _cancelDraw();
     return;
   }
 
-  drawControl = new L.Control.Draw({
-    draw: {
-      rectangle: true,
-      polygon:   false,
-      polyline:  false,
-      circle:    false,
-      circlemarker: false,
-      marker:    false,
-    },
-    edit: {
-      featureGroup: drawnItems,
-      remove: true,
-    },
-  });
-  map.addControl(drawControl);
+  _drawMode    = true;
+  _firstCorner = null;
 
-  map.once(L.Draw.Event.CREATED, (e) => {
-    drawnItems.clearLayers();
-    drawnItems.addLayer(e.layer);
-    _computeAreaSelection(e.layer.getBounds());
-  });
+  const btn  = document.getElementById('draw-area-btn');
+  const hint = document.getElementById('draw-hint');
+  if (btn)  btn.textContent = '🚫 Cancel Drawing';
+  if (hint) { hint.textContent = '🎯 Click the map to set the first corner…'; hint.classList.remove('d-none'); }
+
+  map.getContainer().style.cursor = 'crosshair';
+}
+
+function _cancelDraw() {
+  _drawMode    = false;
+  _firstCorner = null;
+
+  map.getContainer().style.cursor = '';
+  const btn  = document.getElementById('draw-area-btn');
+  const hint = document.getElementById('draw-hint');
+  if (btn)  btn.textContent = '✏ Draw Area of Interest';
+  if (hint) hint.classList.add('d-none');
+}
+
+/**
+ * Clear the drawn rectangle and reset the area selection.
+ */
+function clearArea() {
+  if (_drawnRect) { map.removeLayer(_drawnRect); _drawnRect = null; }
+  selectedSamples = null;
+  document.getElementById('area-download').classList.add('d-none');
+  _cancelDraw();
 }
 
 function _computeAreaSelection(bounds) {
@@ -263,21 +298,8 @@ function _computeAreaSelection(bounds) {
 
   const el = document.getElementById('area-download');
   el.classList.remove('d-none');
-  el.querySelector('#area-count').textContent =
+  document.getElementById('area-count').textContent =
     `${selectedSamples.length} sample${selectedSamples.length !== 1 ? 's' : ''} selected`;
-}
-
-/**
- * Clear the drawn area selection.
- */
-function clearArea() {
-  drawnItems.clearLayers();
-  selectedSamples = null;
-  document.getElementById('area-download').classList.add('d-none');
-  if (drawControl) {
-    map.removeControl(drawControl);
-    drawControl = null;
-  }
 }
 
 // ---------------------------------------------------------------------------

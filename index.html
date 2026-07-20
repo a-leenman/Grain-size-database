@@ -17,11 +17,6 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossorigin="" />
 
-  <!-- Leaflet.draw (no SRI – hash not verifiable at build time; use HTTPS CDN) -->
-  <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
-        crossorigin="anonymous" />
-
   <!-- Custom -->
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -74,13 +69,17 @@
         <hr />
 
         <p class="text-muted mb-1" style="font-size:.78rem;">
-          Draw a rectangle to download only samples within an area.
+          Draw a rectangle to download samples within an area.
+          Click once for the first corner, click again to complete.
         </p>
         <div class="d-grid">
           <button id="draw-area-btn" class="btn btn-sm btn-outline-secondary"
                   onclick="toggleDrawMode()">
             ✏ Draw Area of Interest
           </button>
+        </div>
+        <div id="draw-hint" class="d-none mt-1 text-warning" style="font-size:.75rem;">
+          🎯 Click the map to set the first corner…
         </div>
 
         <div id="area-download" class="mt-2 d-none">
@@ -119,9 +118,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE="
           crossorigin=""></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
-          crossorigin="anonymous"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"
           integrity="sha256-3a5OBlABrkRX1CWkWyZP8AUO+b/Yx0WXSOH9JEijGZM="
