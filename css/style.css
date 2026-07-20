@@ -1,0 +1,270 @@
+/* ============================================================================
+   Riverbed Grain Size Database  –  style.css
+   ============================================================================ */
+
+/* ── Custom properties ──────────────────────────────────────────────────── */
+:root {
+  --gsd-blue:        #1a6fa8;
+  --gsd-blue-light:  #e8f1f8;
+  --gsd-green:       #3a7d44;
+  --gsd-sand:        #c8a876;
+  --gsd-text:        #2c3e50;
+  --gsd-muted:       #6c757d;
+  --gsd-radius:      0.5rem;
+}
+
+/* ── Global ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--gsd-text);
+  background: #f4f6f9;
+}
+
+a { color: var(--gsd-blue); }
+a:hover { color: #14558a; }
+
+/* ── Navbar ──────────────────────────────────────────────────────────────── */
+.navbar {
+  background-color: var(--gsd-blue) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,.20);
+  z-index: 1100;
+  padding: .55rem 1rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: .01em;
+}
+
+/* ── Explore page – full-screen map ─────────────────────────────────────── */
+body.page-explore {
+  display: flex;
+  flex-direction: column;
+}
+
+#map-container {
+  flex: 1;
+  position: relative;
+}
+
+#map {
+  width:  100%;
+  height: 100%;
+  min-height: calc(100vh - 56px);   /* viewport minus navbar */
+}
+
+/* Controls panel (top-right overlay) */
+#controls-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1000;
+  width: 220px;
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: var(--gsd-radius);
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
+  font-size: .85rem;
+}
+
+#controls-panel .card-body { padding: .75rem; }
+#controls-panel .card-title { font-size: .9rem; font-weight: 600; margin-bottom: .5rem; }
+#controls-panel hr { margin: .5rem 0; }
+
+#area-count {
+  font-size: .8rem;
+  color: var(--gsd-green);
+  font-weight: 600;
+}
+
+/* Legend strip (bottom-left overlay) */
+#legend {
+  position: absolute;
+  bottom: 28px;
+  left: 12px;
+  z-index: 1000;
+  background: rgba(255,255,255,.92);
+  border-radius: var(--gsd-radius);
+  padding: 6px 10px;
+  font-size: .75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#legend .legend-bar {
+  width: 80px;
+  height: 10px;
+  border-radius: 2px;
+  background: linear-gradient(to right, hsl(240,70%,48%), hsl(0,70%,48%));
+  display: inline-block;
+}
+
+/* ── Popup styling ───────────────────────────────────────────────────────── */
+.gsd-popup .leaflet-popup-content-wrapper {
+  border-radius: var(--gsd-radius);
+  box-shadow: 0 6px 24px rgba(0,0,0,.18);
+  padding: 0;
+  overflow: hidden;
+}
+
+.gsd-popup .leaflet-popup-content {
+  margin: 0;
+  width: 300px !important;
+}
+
+.gsd-popup-inner {
+  padding: 12px 14px 10px;
+}
+
+.gsd-popup-inner h6 {
+  color: var(--gsd-blue);
+  font-weight: 700;
+  font-size: .95rem;
+}
+
+.gsd-popup .table td {
+  padding: .1rem .3rem;
+  vertical-align: middle;
+}
+
+/* ── Submit page ─────────────────────────────────────────────────────────── */
+body.page-submit {
+  background: #f4f6f9;
+}
+
+.page-submit .content-wrapper {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+/* Section cards */
+.section-card {
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.1);
+  border-radius: var(--gsd-radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  margin-bottom: 1.25rem;
+}
+
+.section-card .section-header {
+  background: var(--gsd-blue-light);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  padding: .65rem 1.1rem;
+  border-radius: var(--gsd-radius) var(--gsd-radius) 0 0;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.section-card .section-header .step-badge {
+  background: var(--gsd-blue);
+  color: #fff;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.section-card .section-header h5 {
+  margin: 0;
+  font-size: .95rem;
+  font-weight: 600;
+  color: var(--gsd-blue);
+}
+
+.section-card .section-body {
+  padding: 1rem 1.1rem;
+}
+
+/* Location map (submit page) */
+#submit-map {
+  height: 280px;
+  border-radius: 0 0 var(--gsd-radius) var(--gsd-radius);
+  border: 1px solid #dee2e6;
+}
+
+/* Bin count table */
+#bin-table {
+  font-size: .83rem;
+}
+
+#bin-table th {
+  font-size: .8rem;
+  background: #f8f9fa;
+  position: sticky;
+  top: 0;
+}
+
+.bin-count {
+  max-width: 100px;
+  min-width: 70px;
+}
+
+/* Scrollable table container */
+.table-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: .375rem;
+}
+
+/* CDF preview */
+#preview-section {
+  border: 1px solid rgba(26,111,168,.25);
+  background: var(--gsd-blue-light);
+  border-radius: var(--gsd-radius);
+  padding: 1rem;
+}
+
+#preview-canvas-wrapper {
+  position: relative;
+  height: 280px;
+}
+
+#preview-stats {
+  font-size: .85rem;
+  color: var(--gsd-text);
+}
+
+/* Photo URLs textarea */
+#photo_urls {
+  font-size: .82rem;
+  resize: vertical;
+}
+
+/* Submit button */
+#submit-btn {
+  background: var(--gsd-blue);
+  border-color: var(--gsd-blue);
+  font-weight: 600;
+  letter-spacing: .02em;
+  padding: .55rem 2rem;
+}
+
+#submit-btn:hover {
+  background: #14558a;
+  border-color: #14558a;
+}
+
+/* ── Utility & responsive ────────────────────────────────────────────────── */
+.text-gsd-blue  { color: var(--gsd-blue);  }
+.bg-gsd-blue    { background: var(--gsd-blue); color: #fff; }
+
+@media (max-width: 576px) {
+  #controls-panel { width: 180px; font-size: .78rem; }
+  .page-submit .content-wrapper { padding: .75rem .5rem 2rem; }
+}

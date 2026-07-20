@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Riverbed Grain Size Database – Explore</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
+  <!-- Leaflet.draw -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"
+        integrity="sha512-gc3figures6re/ME6sRMLENDmbOXK2EAkM+omlkOrML3DzSFPzviTBejKEuBqCe1Uf6dF7lCbZ5rI+Q+W7bGA=="
+        crossorigin="anonymous" />
+
+  <!-- Custom -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="page-explore">
+
+  <!-- ── Navbar ────────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="index.html">
+        🪨 Riverbed Grain Size Database
+      </a>
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMain"
+              aria-controls="navMain" aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-1">
+          <li class="nav-item">
+            <a class="nav-link active" href="index.html">🗺 Explore</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="submit.html">📤 Submit Sample</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Map container ─────────────────────────────────────────────────── -->
+  <div id="map-container">
+    <div id="map" aria-label="Interactive map showing grain size sample locations"></div>
+
+    <!-- Controls overlay -->
+    <div id="controls-panel" class="card" role="complementary" aria-label="Download controls">
+      <div class="card-body">
+        <p class="card-title mb-2">⬇ Download Data</p>
+
+        <div class="d-grid gap-1 mb-2">
+          <button class="btn btn-sm btn-primary" onclick="downloadAllData()">
+            Download All (CSV)
+          </button>
+          <button class="btn btn-sm btn-outline-primary" onclick="downloadAllJSON()">
+            Download All (JSON)
+          </button>
+        </div>
+
+        <hr />
+
+        <p class="text-muted mb-1" style="font-size:.78rem;">
+          Draw a rectangle to download only samples within an area.
+        </p>
+        <div class="d-grid">
+          <button id="draw-area-btn" class="btn btn-sm btn-outline-secondary"
+                  onclick="toggleDrawMode()">
+            ✏ Draw Area of Interest
+          </button>
+        </div>
+
+        <div id="area-download" class="mt-2 d-none">
+          <p id="area-count" class="mb-1"></p>
+          <div class="d-grid gap-1">
+            <button class="btn btn-sm btn-success" onclick="downloadAreaData()">
+              Download Selected Area (CSV)
+            </button>
+            <button class="btn btn-sm btn-link text-danger p-0" onclick="clearArea()">
+              ✕ Clear selection
+            </button>
+          </div>
+        </div>
+
+        <hr />
+        <p id="sample-count" class="text-muted mb-0" style="font-size:.78rem;">
+          Loading…
+        </p>
+      </div>
+    </div>
+
+    <!-- Colour legend -->
+    <div id="legend" aria-label="Marker colour legend">
+      <span>Fine (2 mm)</span>
+      <span class="legend-bar" title="Blue = fine gravel, Red = boulders"></span>
+      <span>Coarse (128 mm)</span>
+    </div>
+  </div><!-- /#map-container -->
+
+
+  <!-- ── Scripts ───────────────────────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+          crossorigin="anonymous"></script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE="
+          crossorigin=""></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"
+          integrity="sha512-oziezu6P3vTMWuKe/sALnfA4FJQsPM+EIFdMQKPW2tgZBAN2QAJjxqbKzJnFKVELFqJrGLj/cKlCmVJn4zGA=="
+          crossorigin="anonymous"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"
+          integrity="sha256-3a5OBlABrkRX1CWkWyZP8AUO+b/Yx0WXSOH9JEijGZM="
+          crossorigin="anonymous"></script>
+
+  <!-- App scripts (order matters) -->
+  <script src="js/config.js"></script>
+  <script src="js/bins.js"></script>
+  <script src="js/cdf.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/map-explore.js"></script>
+</body>
+</html>
