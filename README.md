@@ -161,7 +161,7 @@ You can also add samples by editing `data/samples.json` directly. Each entry fol
 | `coarsest` | > 256 mm | phi < -8 |
 
 For **half-phi** samples add the intermediate keys:
-`0.7071`, `1.4142`, `2.8284`, `5.6569`, `11.3137`, `22.6274`, `45.2548`, `90.5097`, `181.019`
+`0.707`, `1.414`, `2.828`, `5.657`, `11.314`, `22.627`, `45.255`, `90.510`, `181.019`
 
 ---
 

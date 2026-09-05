@@ -200,7 +200,7 @@ function _initFormValidation() {
     if (!sample) return;
 
     // Validate location
-    if (!sample.location.lat || !sample.location.lng) {
+    if (sample.location.lat == null || sample.location.lng == null) {
       _showAlert('Please specify a location (click on the map or enter coordinates).', 'danger');
       return;
     }
@@ -268,6 +268,11 @@ function _buildSampleFromForm() {
   const photo_urls   = photoUrlsRaw.split('\n')
     .map(u => u.trim()).filter(Boolean);
 
+  const latRaw = parseFloat(document.getElementById('lat')?.value);
+  const lngRaw = parseFloat(document.getElementById('lng')?.value);
+  const lat = Number.isFinite(latRaw) ? latRaw : null;
+  const lng = Number.isFinite(lngRaw) ? lngRaw : null;
+
   return {
     collector:        document.getElementById('collector')?.value.trim()        || '',
     institution:      document.getElementById('institution')?.value.trim()      || '',
@@ -281,8 +286,8 @@ function _buildSampleFromForm() {
     notes:            document.getElementById('notes')?.value.trim()            || '',
     photo_urls,
     location: {
-      lat:         parseFloat(document.getElementById('lat')?.value)  || null,
-      lng:         parseFloat(document.getElementById('lng')?.value)  || null,
+      lat,
+      lng,
       description: document.getElementById('loc_description')?.value.trim() || '',
     },
   };

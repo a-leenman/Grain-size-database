@@ -161,7 +161,8 @@ function _buildPopupContent(sample) {
 
   const landformMap = {
     pool: 'Pool', riffle: 'Riffle', bar_head: 'Bar head',
-    bar_top: 'Bar top', bar_tail: 'Bar tail', other: 'Other',
+    bar_top: 'Bar top', bar_tail: 'Bar tail', step: 'Step (step-pool)',
+    glide: 'Glide / run', other: 'Other',
   };
   const conditionMap = {
     underwater: 'Underwater', lightly_imbricated: 'Lightly imbricated',
