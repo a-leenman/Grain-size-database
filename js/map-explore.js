@@ -131,6 +131,9 @@ function _renderMarkers(samples) {
     marker.on('popupopen', (e) => {
       const canvas = e.popup.getElement().querySelector('canvas.mini-cdf');
       if (canvas) {
+        if (activePopupCanvas && activePopupCanvas !== canvas) {
+          destroyChart(activePopupCanvas);
+        }
         renderCDF(canvas, sample, { mini: true });
         activePopupCanvas = canvas;
       }

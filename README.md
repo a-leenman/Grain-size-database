@@ -18,9 +18,9 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 
 ## Quick start (view the site)
 
-1. Enable GitHub Pages for this repository:
-   `Settings → Pages → Source: Deploy from a branch → Branch: main → / (root)`
-   — *or* use the included GitHub Actions workflow (`.github/workflows/pages.yml`).
+1. Enable GitHub Pages for this repository using GitHub Actions:
+   `Settings → Pages → Build and deployment → Source: GitHub Actions`
+   (uses `.github/workflows/pages.yml`).
 
 2. Visit `https://<your-username>.github.io/<repo-name>/`.
 

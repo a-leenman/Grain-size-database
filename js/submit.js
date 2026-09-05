@@ -226,7 +226,7 @@ function _initFormValidation() {
     submitBtn.textContent = 'Submit Sample';
 
     if (result.ok) {
-      _showAlert(result.message + ' <a href="index.html">View on map →</a>', 'success');
+      _showAlertHtml(`${_esc(result.message)} <a href="index.html">View on map →</a>`, 'success');
       form.reset();
       draftSampleId = null;
       form.classList.remove('was-validated');
@@ -239,7 +239,7 @@ function _initFormValidation() {
       if (previewChartCanvas) { destroyChart(previewChartCanvas); previewChartCanvas = null; }
       _hideExportButton();
     } else {
-      _showAlert(result.message, 'warning');
+      _showAlertText(result.message, 'warning');
 
       // Offer a manual JSON download as fallback.
       const exportBtn = document.getElementById('export-btn');
@@ -319,6 +319,14 @@ function _showAlert(html, type) {
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+function _showAlertHtml(html, type) {
+  _showAlert(html, type);
+}
+
+function _showAlertText(text, type) {
+  _showAlert(_esc(text), type);
+}
+
 function _hideExportButton() {
   const exportBtn = document.getElementById('export-btn');
   if (!exportBtn) return;
@@ -338,4 +346,10 @@ function _setDateMaxToToday() {
 /** Make a bin key safe for use in an HTML id attribute. */
 function _idSafe(key) {
   return key.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function _esc(str) {
+  const d = document.createElement('div');
+  d.textContent = str == null ? '' : String(str);
+  return d.innerHTML;
 }
