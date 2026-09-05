@@ -32,7 +32,7 @@ const DX_PRECISION = 2;
 // ── Column headers written to the sheet ────────────────────────────────────
 const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
-  'river_name', 'lat', 'lng', 'location_description',
+  'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
   'landform', 'surface_condition', 'phi_interval',
   'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
   'notes', 'photo_urls',
@@ -118,6 +118,7 @@ function _appendSample(sample) {
     sample.collector || '',
     sample.institution || '',
     sample.river_name || '',
+    sample.paper_doi || '',
     (sample.location && sample.location.lat)  || '',
     (sample.location && sample.location.lng)  || '',
     (sample.location && sample.location.description) || '',
@@ -158,6 +159,7 @@ function _getAllSamples() {
       collector:         obj.collector,
       institution:       obj.institution,
       river_name:        obj.river_name,
+      paper_doi:         obj.paper_doi || '',
       location: {
         lat:         parseFloat(obj.lat)  || null,
         lng:         parseFloat(obj.lng)  || null,

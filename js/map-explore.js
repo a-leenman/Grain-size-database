@@ -175,7 +175,7 @@ function _buildPopupContent(sample) {
   const river     = _esc(sample.river_name || '–');
   const collector = _esc(sample.collector  || '–');
   const inst      = _esc(sample.institution || '');
-  const rawDoi    = (sample.paper_doi || '').trim();
+  const rawDoi    = normalizeSampleDOI(sample.paper_doi);
   const doi       = _esc(rawDoi);
   const doiHref   = _esc(`https://doi.org/${rawDoi}`);
   const notes     = _esc(sample.notes || '');
@@ -325,7 +325,13 @@ async function downloadAreaData() {
     'grain-size-samples-area.csv',
     'text/csv;charset=utf-8;',
   );
-  await downloadBibliographyForSamples(selectedSamples, 'grain-size-samples-area-references.txt');
+  const style = document.getElementById('bibliography-style')?.value || 'harvard';
+  const ext = style === 'bibtex' ? 'bib' : 'txt';
+  await downloadBibliographyForSamples(
+    selectedSamples,
+    `grain-size-samples-area-references.${ext}`,
+    style,
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -229,25 +229,30 @@ function getUniqueSampleDois(samples) {
   return out;
 }
 
-async function downloadBibliographyForSamples(samples, filename = 'grain-size-references.txt') {
+async function downloadBibliographyForSamples(samples, filename = 'grain-size-references.txt', style = 'harvard') {
   const dois = getUniqueSampleDois(samples);
   if (!dois.length) return { ok: false, reason: 'no-doi' };
 
   const citations = [];
   for (const doi of dois) {
-    citations.push(await _buildCitation(doi));
+    citations.push(await _buildCitation(doi, style));
   }
 
+  const contentType = style === 'bibtex' ? 'application/x-bibtex;charset=utf-8;' : 'text/plain;charset=utf-8;';
+  const styleLabel = style === 'bibtex' ? 'BibTeX' : (style === 'chicago' ? 'Chicago' : 'Harvard');
   const content = [
     'Riverbed Grain Size Database bibliography',
     `Generated: ${new Date().toISOString()}`,
+    `Style: ${styleLabel}`,
     `Studies: ${dois.length}`,
     '',
-    ...citations.map((c, i) => `${i + 1}. ${c}`),
+    ...(style === 'bibtex'
+      ? citations
+      : citations.map((c, i) => `${i + 1}. ${c}`)),
     '',
   ].join('\n');
 
-  downloadFile(content, filename, 'text/plain;charset=utf-8;');
+  downloadFile(content, filename, contentType);
   return { ok: true, count: dois.length };
 }
 
@@ -300,43 +305,63 @@ function _csvEsc(str) {
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return '"' + s.replace(/"/g, '""') + '"';
   }
+  return s;
+}
 
-  async function _buildCitation(doi) {
-    try {
-      const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const message = data?.message || {};
-
-      const authors = _formatCitationAuthors(message.author || []);
-      const year = message?.issued?.['date-parts']?.[0]?.[0] || 'n.d.';
-      const title = (message.title && message.title[0]) || 'Untitled';
-      const journal = (message['container-title'] && message['container-title'][0]) || '';
-      const volume = message.volume ? ` ${message.volume}` : '';
-      const issue = message.issue ? `(${message.issue})` : '';
-      const page = message.page ? `, ${message.page}` : '';
-
-      let citation = `${authors} (${year}). ${title}.`;
-      if (journal) citation += ` ${journal}${volume}${issue}${page}.`;
-      citation += ` https://doi.org/${doi}`;
-      return citation.replace(/\s+/g, ' ').trim();
-    } catch {
-      return `https://doi.org/${doi}`;
-    }
+async function _buildCitation(doi, style) {
+  if (style === 'bibtex') return _buildBibtexCitation(doi);
+  const cslStyle = style === 'chicago' ? 'chicago-author-date' : 'harvard-cite-them-right';
+  try {
+    const url = `https://api.crossref.org/works/${encodeURIComponent(doi)}/transform/text/x-bibliography?style=${encodeURIComponent(cslStyle)}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = (await res.text()).trim();
+    if (!text) throw new Error('Empty citation');
+    return text;
+  } catch {
+    return _buildFallbackTextCitation(doi);
   }
+}
 
-  function _formatCitationAuthors(authors) {
-    if (!authors.length) return 'Unknown author';
-    const names = authors.map(a => {
+async function _buildBibtexCitation(doi) {
+  try {
+    const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const message = data?.message || {};
+    const year = message?.issued?.['date-parts']?.[0]?.[0] || 'n.d.';
+    const rawTitle = (message.title && message.title[0]) || 'Untitled';
+    const title = rawTitle.replace(/[{}]/g, '');
+    const journal = ((message['container-title'] && message['container-title'][0]) || '').replace(/[{}]/g, '');
+    const author = _toBibtexAuthors(message.author || []);
+    const keyBase = author.split(' and ')[0] || 'unknown';
+    const key = `${keyBase.toLowerCase().replace(/[^a-z0-9]/g, '')}${year}`;
+    const fields = [
+      `  title = {${title}}`,
+      author ? `  author = {${author}}` : '',
+      journal ? `  journal = {${journal}}` : '',
+      `  year = {${year}}`,
+      `  doi = {${doi}}`,
+      `  url = {https://doi.org/${doi}}`,
+    ].filter(Boolean);
+    return `@article{${key},\n${fields.join(',\n')}\n}`;
+  } catch {
+    return `@misc{doi_${doi.replace(/[^a-zA-Z0-9]/g, '_')},\n  doi = {${doi}},\n  url = {https://doi.org/${doi}}\n}`;
+  }
+}
+
+function _toBibtexAuthors(authors) {
+  return authors
+    .map(a => {
       const family = (a.family || '').trim();
       const given = (a.given || '').trim();
       if (family && given) return `${family}, ${given}`;
       return family || given || '';
-    }).filter(Boolean);
-    if (!names.length) return 'Unknown author';
-    if (names.length === 1) return names[0];
-    if (names.length === 2) return `${names[0]} & ${names[1]}`;
-    return `${names[0]} et al.`;
-  }
-  return s;
+    })
+    .filter(Boolean)
+    .join(' and ');
+}
+
+function _buildFallbackTextCitation(doi) {
+  return `https://doi.org/${doi}`;
 }

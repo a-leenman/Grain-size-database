@@ -84,6 +84,14 @@
 
         <div id="area-download" class="mt-2 d-none">
           <p id="area-count" class="mb-1"></p>
+          <label for="bibliography-style" class="form-label mb-1" style="font-size:.78rem;">
+            Bibliography style
+          </label>
+          <select id="bibliography-style" class="form-select form-select-sm mb-2">
+            <option value="harvard" selected>Harvard</option>
+            <option value="chicago">Chicago</option>
+            <option value="bibtex">BibTeX</option>
+          </select>
           <div class="d-grid gap-1">
             <button class="btn btn-sm btn-success" onclick="downloadAreaData()">
               Download Selected Area (CSV)
