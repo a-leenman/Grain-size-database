@@ -19,12 +19,14 @@ let map;                  // Leaflet map instance
 let markersLayer;         // FeatureGroup holding all sample markers
 let selectedSamples;      // Samples within the drawn area (or null = all)
 let activePopupCanvas;    // The canvas whose Chart lives in the open popup
+let adminToken = sessionStorage.getItem('gsdAdminToken') || '';
 
 // ---------------------------------------------------------------------------
 // Initialisation
 // ---------------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', async () => {
+  _syncAdminUi();
   _initMap();
   await _loadAndRender();
 });
@@ -115,7 +117,7 @@ function _renderMarkers(samples) {
     const marker = L.circleMarker([lat, lng], {
       radius:      8,
       fillColor:   color,
-      color:       '#fff',
+      color:       _asBool(sample.qc_checked) ? '#198754' : '#fff',
       weight:      2,
       opacity:     1,
       fillOpacity: 0.85,
@@ -184,6 +186,16 @@ function _buildPopupContent(sample) {
   const doi       = _esc(rawDoi);
   const doiHref   = rawDoi ? _esc(`https://doi.org/${rawDoi}`) : '';
   const notes     = _esc(sample.notes || '');
+  const qcChecked = _asBool(sample.qc_checked);
+  const qcLabel   = qcChecked ? '✅ QC checked' : '⚠ Not QC checked';
+  const qcBy      = _esc(sample.qc_checked_by || '');
+  const qcAt      = _esc(sample.qc_checked_at || '');
+  const qcDetail  = qcChecked && (qcBy || qcAt)
+    ? ` (${[qcBy, qcAt].filter(Boolean).join(' • ')})`
+    : '';
+  const qcToggleHtml = _isAdminSignedIn() && sample.id
+    ? `<button class="btn btn-sm btn-outline-dark mt-1" onclick="toggleSampleQC(${JSON.stringify(sample.id)}, ${qcChecked ? 'false' : 'true'})">${qcChecked ? 'Mark as not QC checked' : 'Mark as QC checked'}</button>`
+    : '';
 
   const statsRow = (d10 != null && d50 != null && d84 != null)
     ? `<tr><td><b>D<sub>10</sub></b></td><td>${d10} mm</td>
@@ -219,6 +231,9 @@ function _buildPopupContent(sample) {
             <td><b>n</b></td><td colspan="2">${total} clasts</td>
             <td><b>Phi</b></td><td colspan="2">${sample.phi_interval === 'half' ? '½ φ' : '1 φ'}</td>
           </tr>
+          <tr>
+            <td><b>QC</b></td><td colspan="5">${qcLabel}${qcDetail}</td>
+          </tr>
           ${statsRow}
         </tbody>
       </table>
@@ -227,6 +242,7 @@ function _buildPopupContent(sample) {
       </div>
       ${notes ? `<p class="mb-1" style="font-size:0.75rem;color:#555;"><i>${notes}</i></p>` : ''}
       ${photosHtml ? `<div class="mb-1" style="font-size:0.8rem;">${photosHtml}</div>` : ''}
+      ${qcToggleHtml}
     </div>`;
 }
 
@@ -354,6 +370,51 @@ async function _downloadBibliographyBundle(samples, baseName) {
   const style = _selectedBibliographyStyle();
   const ext = style === 'bibtex' ? 'bib' : 'txt';
   await downloadBibliographyForSamples(samples, `${baseName}.${ext}`, style);
+}
+
+function _isAdminSignedIn() {
+  return !!adminToken;
+}
+
+function _syncAdminUi() {
+  const signin = document.getElementById('admin-signin-btn');
+  const signout = document.getElementById('admin-signout-btn');
+  const status = document.getElementById('admin-status');
+  if (!signin || !signout || !status) return;
+  if (_isAdminSignedIn()) {
+    signin.classList.add('d-none');
+    signout.classList.remove('d-none');
+    status.textContent = 'Admin signed in';
+  } else {
+    signin.classList.remove('d-none');
+    signout.classList.add('d-none');
+    status.textContent = 'Not signed in';
+  }
+}
+
+function adminSignIn() {
+  const token = window.prompt('Enter admin token to enable QC controls:');
+  if (!token) return;
+  adminToken = token.trim();
+  sessionStorage.setItem('gsdAdminToken', adminToken);
+  _syncAdminUi();
+}
+
+function adminSignOut() {
+  adminToken = '';
+  sessionStorage.removeItem('gsdAdminToken');
+  _syncAdminUi();
+}
+
+async function toggleSampleQC(sampleId, qcChecked) {
+  if (!_isAdminSignedIn()) return;
+  const reviewer = window.prompt('Enter reviewer name/initials:', 'Admin') || 'Admin';
+  const result = await updateSampleQC(sampleId, !!qcChecked, adminToken, reviewer.trim() || 'Admin');
+  if (!result.ok) {
+    window.alert(`QC update failed: ${result.message}`);
+    return;
+  }
+  await _loadAndRender();
 }
 
 // ---------------------------------------------------------------------------

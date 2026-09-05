@@ -11,6 +11,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 | **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. |
 | **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs), and choose whether your name+institution can be publicly acknowledged; choose full-phi or half-phi size bins; enter grain counts. |
 | **Contributors page** | Lists contributor names, institutions, and total contributed sample counts (grouped by contributor email) only for submissions where contributors opted in to public acknowledgement. |
+| **QC status** | Samples can be marked as QC-checked by an admin; QC status is shown in map popups and included in exports. |
 | **Live CDF preview** | Cumulative distribution (% finer than vs. grain size in mm, log scale) drawn in real time as you enter counts. |
 | **Download data** | Download the full database as CSV or JSON. Every dataset download also includes a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago), including area-selected downloads from drawn rectangles. |
 | **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets. |
@@ -77,11 +78,12 @@ To enable crowd-sourced data collection with persistent storage:
 1. Open [Google Apps Script](https://script.google.com) → **New project**.
 2. Replace the default code with the contents of `apps-script/Code.gs`.
 3. Set `SHEET_ID` at the top of the script to your spreadsheet's ID.
-4. Click **Deploy → New Deployment**:
+4. Set `ADMIN_QC_TOKEN` in `Code.gs` for admin QC sign-in.
+5. Click **Deploy → New Deployment**:
    - Type: **Web App**
    - Execute as: **Me**
    - Who has access: **Anyone**
-5. Click **Deploy** and **copy the Web App URL**.
+6. Click **Deploy** and **copy the Web App URL**.
 
 ### 3 – Configure the frontend
 
@@ -143,7 +145,10 @@ You can also add samples by editing `data/samples.json` directly. Each entry fol
     "coarsest": 0
   },
   "notes": "Low flow; bar exposed. Surface moderately armoured.",
-  "photo_urls": []
+  "photo_urls": [],
+  "qc_checked":       false,
+  "qc_checked_at":    "",
+  "qc_checked_by":    ""
 }
 ```
 

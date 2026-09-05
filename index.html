@@ -110,6 +110,18 @@
         </div>
 
         <hr />
+        <p class="text-muted mb-1" style="font-size:.78rem;">QC tools (admin)</p>
+        <div class="d-grid gap-1 mb-2">
+          <button id="admin-signin-btn" class="btn btn-sm btn-outline-dark" onclick="adminSignIn()">
+            🔐 Admin sign in
+          </button>
+          <button id="admin-signout-btn" class="btn btn-sm btn-outline-secondary d-none" onclick="adminSignOut()">
+            Sign out
+          </button>
+        </div>
+        <p id="admin-status" class="text-muted mb-2" style="font-size:.75rem;">Not signed in</p>
+
+        <hr />
         <p id="sample-count" class="text-muted mb-0" style="font-size:.78rem;">
           Loading…
         </p>

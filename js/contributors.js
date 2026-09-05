@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const samples = await loadSamples();
-    const contributors = _collectContributors(samples);
+    const { contributors, skipped } = _collectContributors(samples);
 
     if (!contributors.length) {
       statusEl.textContent = 'No public contributors yet.';
       return;
     }
 
-    statusEl.textContent = `${contributors.length} contributor${contributors.length === 1 ? '' : 's'}`;
+    statusEl.textContent = `${contributors.length} contributor${contributors.length === 1 ? '' : 's'}${skipped ? ` (${skipped} record${skipped === 1 ? '' : 's'} skipped: missing contributor ID)` : ''}`;
     contributors.forEach(({ name, institution, sampleCount }) => {
       const li = document.createElement('li');
       li.className = 'list-group-item px-0';
@@ -35,14 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function _collectContributors(samples) {
   const outByKey = new Map();
+  let skipped = 0;
 
   (samples || []).forEach(sample => {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
     const name = String(sample?.collector || '').trim();
     const institution = String(sample?.institution || '').trim();
-    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase()
-      || `${name.toLowerCase()}|${institution.toLowerCase()}`;
-    if (!name || !contributorId) return;
+    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase();
+    if (!name || !contributorId) { skipped += 1; return; }
     if (!outByKey.has(contributorId)) {
       outByKey.set(contributorId, { name, institution, sampleCount: 0 });
     }
@@ -52,10 +52,11 @@ function _collectContributors(samples) {
     if (item.name !== name && name) item.name = name;
   });
 
-  return Array.from(outByKey.values()).sort((a, b) => {
+  const contributors = Array.from(outByKey.values()).sort((a, b) => {
     if (b.sampleCount !== a.sampleCount) return b.sampleCount - a.sampleCount;
     return a.name.localeCompare(b.name);
   });
+  return { contributors, skipped };
 }
 
 function _asBool(value) {

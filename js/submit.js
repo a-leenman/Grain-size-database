@@ -306,6 +306,9 @@ function _buildSampleFromForm() {
     surface_condition:document.getElementById('surface_condition')?.value       || '',
     phi_interval:     interval,
     counts,
+    qc_checked:       false,
+    qc_checked_at:    '',
+    qc_checked_by:    '',
     notes:            document.getElementById('notes')?.value.trim()            || '',
     photo_urls,
     location: {

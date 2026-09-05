@@ -68,6 +68,40 @@ function getSamples() {
   return _cache || [];
 }
 
+async function updateSampleQC(sampleId, qcChecked, adminToken, checkedBy = 'Admin') {
+  if (!CONFIG.API_URL) return { ok: false, message: 'QC updates require an API backend.' };
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'updateQC',
+        token: adminToken || '',
+        sample_id: sampleId,
+        qc_checked: !!qcChecked,
+        qc_checked_by: checkedBy || 'Admin',
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Unknown error');
+    if (_cache) {
+      const idx = _cache.findIndex(s => s.id === sampleId);
+      if (idx >= 0) {
+        _cache[idx] = {
+          ..._cache[idx],
+          qc_checked: !!qcChecked,
+          qc_checked_at: json.qc_checked_at || new Date().toISOString(),
+          qc_checked_by: checkedBy || 'Admin',
+        };
+      }
+    }
+    return { ok: true, message: 'QC flag updated.' };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Saving
 // ---------------------------------------------------------------------------
@@ -147,7 +181,7 @@ function samplesToCSV(samples) {
     'id', 'timestamp', 'date_collected', 'collector', 'institution',
     'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
     'landform', 'surface_condition', 'phi_interval',
-    'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
+    'total_count', 'D10_mm', 'D50_mm', 'D84_mm', 'qc_checked', 'qc_checked_at', 'qc_checked_by',
     'notes', 'photo_urls',
   ];
 
@@ -179,6 +213,9 @@ function samplesToCSV(samples) {
       pub.phi_interval,
       total,
       d10, d50, d84,
+      pub.qc_checked ? 'true' : 'false',
+      _csvEsc(pub.qc_checked_at || ''),
+      _csvEsc(pub.qc_checked_by || ''),
       _csvEsc(pub.notes ?? ''),
       _csvEsc(photos),
     ].join(',');
@@ -334,6 +371,7 @@ function _toPublicSample(sample) {
   if (!isPublicContributor) {
     out.collector = '';
     out.institution = '';
+    out.contributor_id = '';
   }
   delete out.contributor_email;
   return out;

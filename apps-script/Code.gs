@@ -24,6 +24,7 @@
 // ── Configuration ──────────────────────────────────────────────────────────
 const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
 const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
+const ADMIN_QC_TOKEN = 'CHANGE_ME_ADMIN_QC_TOKEN';
 // Decimal places used when writing Dx percentile statistics to the sheet.
 // Must match CONFIG.DX_PRECISION in js/config.js.
 const DX_PRECISION = 2;
@@ -33,7 +34,7 @@ const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
   'contributor_email', 'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
   'landform', 'surface_condition', 'phi_interval',
-  'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
+  'total_count', 'D10_mm', 'D50_mm', 'D84_mm', 'qc_checked', 'qc_checked_at', 'qc_checked_by',
   'notes', 'photo_urls',
   'counts_json',   // raw JSON blob of the full counts object
 ];
@@ -66,9 +67,34 @@ function _toPublicSample(sample) {
   if (!_toBool(out.allow_public_acknowledgement)) {
     out.collector = '';
     out.institution = '';
+    out.contributor_id = '';
   }
   delete out.contributor_email;
   return out;
+}
+
+function _isValidAdminToken(token) {
+  return !!ADMIN_QC_TOKEN && token === ADMIN_QC_TOKEN;
+}
+
+function _updateSampleQcStatus(sampleId, qcChecked, qcCheckedBy) {
+  const sheet = _getSheet();
+  const dataRows = Math.max(0, sheet.getLastRow() - 1);
+  if (dataRows === 0) throw new Error('No samples found');
+  const idValues = sheet.getRange(2, 1, dataRows, 1).getValues();
+  const rowIndex = idValues.findIndex(r => String(r[0]) === String(sampleId));
+  if (rowIndex < 0) throw new Error('Sample not found');
+  const rowNumber = rowIndex + 2;
+  const qcCheckedAt = qcChecked ? new Date().toISOString() : '';
+  const qcCheckedByVal = qcChecked ? String(qcCheckedBy || 'Admin') : '';
+
+  const qcCheckedCol = HEADERS.indexOf('qc_checked') + 1;
+  const qcCheckedAtCol = HEADERS.indexOf('qc_checked_at') + 1;
+  const qcCheckedByCol = HEADERS.indexOf('qc_checked_by') + 1;
+  sheet.getRange(rowNumber, qcCheckedCol).setValue(_toBool(qcChecked));
+  sheet.getRange(rowNumber, qcCheckedAtCol).setValue(qcCheckedAt);
+  sheet.getRange(rowNumber, qcCheckedByCol).setValue(qcCheckedByVal);
+  return { qc_checked_at: qcCheckedAt };
 }
 
 function _isValidSample(sample) {
@@ -81,6 +107,8 @@ function _isValidSample(sample) {
   const lng = sample.location && sample.location.lng;
   if (!Number.isFinite(lat) || lat < -90 || lat > 90) return false;
   if (!Number.isFinite(lng) || lng < -180 || lng > 180) return false;
+  const email = _normalizeEmail(sample.contributor_email);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
   if (!sample.counts || typeof sample.counts !== 'object') return false;
   const total = Object.keys(sample.counts).reduce((sum, k) => sum + (parseInt(sample.counts[k], 10) || 0), 0);
   return total > 0;
@@ -108,6 +136,17 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
 
     if (payload.action !== 'submit') {
+      if (payload.action === 'updateQC') {
+        if (!_isValidAdminToken(payload.token)) {
+          return _corsResponse({ status: 'error', message: 'Unauthorized QC update' });
+        }
+        const qcResult = _updateSampleQcStatus(payload.sample_id, _toBool(payload.qc_checked), payload.qc_checked_by || 'Admin');
+        return _corsResponse({
+          status: 'ok',
+          message: 'QC flag updated.',
+          qc_checked_at: qcResult.qc_checked_at,
+        });
+      }
       return _corsResponse({ status: 'error', message: 'Unknown action' });
     }
 
@@ -176,6 +215,9 @@ function _appendSample(sample) {
     stats.d10 || '',
     stats.d50 || '',
     stats.d84 || '',
+    _toBool(sample.qc_checked),
+    sample.qc_checked_at || '',
+    sample.qc_checked_by || '',
     sample.notes || '',
     (sample.photo_urls || []).join('; '),
     JSON.stringify(sample.counts || {}),
@@ -233,6 +275,9 @@ function _getAllSamples() {
       landform:          obj.landform,
       surface_condition: obj.surface_condition,
       phi_interval:      obj.phi_interval || 'full',
+      qc_checked:        _toBool(obj.qc_checked),
+      qc_checked_at:     obj.qc_checked_at || '',
+      qc_checked_by:     obj.qc_checked_by || '',
       counts,
       notes:             obj.notes || '',
       photo_urls:        obj.photo_urls ? obj.photo_urls.split('; ').filter(Boolean) : [],
