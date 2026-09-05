@@ -1,10 +1,16 @@
 'use strict';
 
+const WELCOME_ACK_KEY = 'gsdWelcomeAcknowledged';
+
 document.addEventListener('DOMContentLoaded', () => {
+  if (localStorage.getItem(WELCOME_ACK_KEY) === 'true') return;
   if (typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
   _ensureWelcomeModal();
   const modalEl = document.getElementById('welcome-modal');
   if (!modalEl) return;
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    localStorage.setItem(WELCOME_ACK_KEY, 'true');
+  }, { once: true });
   const modal = new bootstrap.Modal(modalEl, {
     backdrop: 'static',
     keyboard: false,
