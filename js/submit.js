@@ -147,24 +147,41 @@ function _renderBinTable(interval, minOpeningMm) {
     const pctVal = previousPercentages[bin.key] ?? '';
     const pctManual = previousPctManual[bin.key] ? 'true' : 'false';
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="text-nowrap">${bin.label}</td>
-      <td>
-        <input type="number" class="form-control form-control-sm bin-count text-end"
-               id="bin-${_idSafe(bin.key)}"
-               data-bin-key="${bin.key}"
-               min="0" step="1" value="${count}"
-               aria-label="${bin.label} count">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm bin-pct text-end"
-               id="bin-pct-${_idSafe(bin.key)}"
-               data-bin-key="${bin.key}"
-               data-manual="${pctManual}"
-               min="0" max="100" step="0.1" value="${pctVal}"
-               placeholder="auto"
-               aria-label="${bin.label} percent">
-      </td>`;
+
+    const sizeTd = document.createElement('td');
+    sizeTd.className = 'text-nowrap';
+    sizeTd.textContent = bin.label;
+    tr.appendChild(sizeTd);
+
+    const countTd = document.createElement('td');
+    const countInput = document.createElement('input');
+    countInput.type = 'number';
+    countInput.className = 'form-control form-control-sm bin-count text-end';
+    countInput.id = `bin-${_idSafe(bin.key)}`;
+    countInput.dataset.binKey = bin.key;
+    countInput.min = '0';
+    countInput.step = '1';
+    countInput.value = String(count);
+    countInput.setAttribute('aria-label', `${bin.label} count`);
+    countTd.appendChild(countInput);
+    tr.appendChild(countTd);
+
+    const pctTd = document.createElement('td');
+    const pctInput = document.createElement('input');
+    pctInput.type = 'number';
+    pctInput.className = 'form-control form-control-sm bin-pct text-end';
+    pctInput.id = `bin-pct-${_idSafe(bin.key)}`;
+    pctInput.dataset.binKey = bin.key;
+    pctInput.dataset.manual = pctManual;
+    pctInput.min = '0';
+    pctInput.max = '100';
+    pctInput.step = '0.1';
+    pctInput.value = String(pctVal);
+    pctInput.placeholder = 'auto';
+    pctInput.setAttribute('aria-label', `${bin.label} percent`);
+    pctTd.appendChild(pctInput);
+    tr.appendChild(pctTd);
+
     tbody.appendChild(tr);
   });
 
@@ -463,26 +480,26 @@ function _contributorIdFromEmail(email) {
     hash = ((hash << 5) + hash) + value.charCodeAt(i);
     hash &= 0xffffffff;
   }
-
-  function _addBasemapWithFallback(targetMap) {
-    let switched = false;
-    const esri = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        maxZoom: 19,
-      },
-    );
-    esri.on('tileerror', () => {
-      if (switched) return;
-      switched = true;
-      targetMap.removeLayer(esri);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(targetMap);
-    });
-    esri.addTo(targetMap);
-  }
   return `contrib-${(hash >>> 0).toString(16)}`;
+}
+
+function _addBasemapWithFallback(targetMap) {
+  let switched = false;
+  const esri = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19,
+    },
+  );
+  esri.on('tileerror', () => {
+    if (switched) return;
+    switched = true;
+    targetMap.removeLayer(esri);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(targetMap);
+  });
+  esri.addTo(targetMap);
 }

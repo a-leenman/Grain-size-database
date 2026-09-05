@@ -305,7 +305,8 @@ function _getAllSamples() {
 
 function _computeStats(sample) {
   const interval = sample.phi_interval === 'half' ? 0.5 : 1.0;
-  const boundaries = _generateBoundaries(interval);
+  const minOpeningMm = Number(sample.min_opening_mm) || 0.5;
+  const boundaries = _generateBoundaries(interval, minOpeningMm);
 
   const counts = sample.counts || {};
   let total = 0;
@@ -347,12 +348,17 @@ function _interpolateDx(mmVals, pctVals, pct) {
   return mmVals[mmVals.length - 1].toFixed(DX_PRECISION);
 }
 
-function _generateBoundaries(interval) {
+function _generateBoundaries(interval, minOpeningMm) {
   const boundaries = [];
   const eps = 1e-9;
   const phiList = [];
-  for (let phi = 1.0; phi >= -8.0 - eps; phi -= interval) {
+  const minMm = Number.isFinite(minOpeningMm) && minOpeningMm > 0 ? minOpeningMm : 0.5;
+  const startPhi = -Math.log(minMm) / Math.log(2);
+  for (let phi = startPhi; phi >= -8.0 - eps; phi -= interval) {
     phiList.push(parseFloat(phi.toFixed(4)));
+  }
+  if (!phiList.length || phiList[phiList.length - 1] > -8.0 + eps) {
+    phiList.push(-8.0);
   }
 
   const mmList = phiList.map(p => Math.pow(2, -p));

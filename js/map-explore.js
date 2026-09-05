@@ -438,27 +438,27 @@ function _safeExternalUrl(value) {
   } catch {
     return null;
   }
+}
 
-  function _addBasemapWithFallback(targetMap) {
-    let switched = false;
-    const esri = L.tileLayer(
-      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      {
-        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-        maxZoom: 19,
-      },
-    );
-    esri.on('tileerror', () => {
-      if (switched) return;
-      switched = true;
-      targetMap.removeLayer(esri);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19,
-      }).addTo(targetMap);
-    });
-    esri.addTo(targetMap);
-  }
+function _addBasemapWithFallback(targetMap) {
+  let switched = false;
+  const esri = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19,
+    },
+  );
+  esri.on('tileerror', () => {
+    if (switched) return;
+    switched = true;
+    targetMap.removeLayer(esri);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(targetMap);
+  });
+  esri.addTo(targetMap);
 }
 
 function _asBool(value) {
