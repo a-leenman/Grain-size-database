@@ -402,11 +402,20 @@ function _syncAdminUi() {
   }
 }
 
-function adminSignIn() {
+async function adminSignIn() {
   const token = window.prompt('Enter admin token to enable QC controls:');
   if (!token) return;
-  adminToken = token.trim();
+  const candidate = token.trim();
+  const result = await validateAdminToken(candidate);
+  if (!result.ok) {
+    adminToken = '';
+    _syncAdminUi();
+    window.alert(`Admin sign-in failed: ${result.message}`);
+    return;
+  }
+  adminToken = candidate;
   _syncAdminUi();
+  await _loadAndRender();
 }
 
 function adminSignOut() {

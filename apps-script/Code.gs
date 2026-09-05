@@ -148,6 +148,12 @@ function doPost(e) {
     const payload = JSON.parse(e.postData.contents);
 
     if (payload.action !== 'submit') {
+      if (payload.action === 'authQC') {
+        if (!_isValidAdminToken(payload.token)) {
+          return _corsResponse({ status: 'error', message: 'Unauthorized admin token' });
+        }
+        return _corsResponse({ status: 'ok', message: 'Authorized' });
+      }
       if (payload.action === 'updateQC') {
         if (!_isValidAdminToken(payload.token)) {
           return _corsResponse({ status: 'error', message: 'Unauthorized QC update' });

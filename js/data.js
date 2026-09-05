@@ -34,7 +34,7 @@ async function loadSamples() {
       if (res.ok) {
         const json = await res.json();
         const remote = Array.isArray(json) ? json : (json.samples || []);
-        _cache = _mergeWithLocal(remote).map(_toPublicSample);
+        _cache = remote.map(_toPublicSample);
         return _cache;
       }
     } catch (err) {
@@ -94,6 +94,26 @@ async function updateSampleQC(sampleId, qcChecked, adminToken, checkedBy = 'Admi
           qc_checked_at: json.qc_checked_at || new Date().toISOString(),
           qc_checked_by: checkedBy || 'Admin',
         };
+      }
+
+      async function validateAdminToken(adminToken) {
+        if (!CONFIG.API_URL) return { ok: false, message: 'No API backend configured.' };
+        try {
+          const res = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+              action: 'authQC',
+              token: adminToken || '',
+            }),
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const json = await res.json();
+          if (json.status !== 'ok') throw new Error(json.message || 'Unauthorized');
+          return { ok: true };
+        } catch (err) {
+          return { ok: false, message: err.message };
+        }
       }
     }
     return { ok: true, message: 'QC flag updated.' };
