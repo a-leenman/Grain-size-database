@@ -33,10 +33,11 @@ const DX_PRECISION = 2;
 const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
   'contributor_email', 'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
-  'landform', 'surface_condition', 'phi_interval',
+  'landform', 'surface_condition', 'min_opening_mm', 'phi_interval',
   'total_count', 'D10_mm', 'D50_mm', 'D84_mm', 'qc_checked', 'qc_checked_at', 'qc_checked_by',
   'notes', 'photo_urls',
   'counts_json',   // raw JSON blob of the full counts object
+  'percentages_json',
 ];
 
 // ── CORS helper ─────────────────────────────────────────────────────────────
@@ -110,8 +111,19 @@ function _isValidSample(sample) {
   const email = _normalizeEmail(sample.contributor_email);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
   if (!sample.counts || typeof sample.counts !== 'object') return false;
+  const minOpening = Number(sample.min_opening_mm);
+  if (!Number.isFinite(minOpening) || minOpening <= 0) return false;
   const total = Object.keys(sample.counts).reduce((sum, k) => sum + (parseInt(sample.counts[k], 10) || 0), 0);
   return total > 0;
+}
+
+function _parseJsonObject(raw) {
+  try {
+    const parsed = JSON.parse(raw || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
 }
 
 // ── GET handler ─────────────────────────────────────────────────────────────
@@ -210,6 +222,7 @@ function _appendSample(sample) {
     (sample.location && sample.location.description) || '',
     sample.landform || '',
     sample.surface_condition || '',
+    Number(sample.min_opening_mm) || 0.5,
     sample.phi_interval || 'full',
     stats.total,
     stats.d10 || '',
@@ -221,6 +234,7 @@ function _appendSample(sample) {
     sample.notes || '',
     (sample.photo_urls || []).join('; '),
     JSON.stringify(sample.counts || {}),
+    JSON.stringify(sample.percentages || {}),
   ];
 
   const dataRows = Math.max(0, sheet.getLastRow() - 1);
@@ -274,11 +288,13 @@ function _getAllSamples() {
       },
       landform:          obj.landform,
       surface_condition: obj.surface_condition,
+      min_opening_mm:    parseFloat(obj.min_opening_mm) || 0.5,
       phi_interval:      obj.phi_interval || 'full',
       qc_checked:        _toBool(obj.qc_checked),
       qc_checked_at:     obj.qc_checked_at || '',
       qc_checked_by:     obj.qc_checked_by || '',
       counts,
+      percentages:       _parseJsonObject(obj.percentages_json),
       notes:             obj.notes || '',
       photo_urls:        obj.photo_urls ? obj.photo_urls.split('; ').filter(Boolean) : [],
     };

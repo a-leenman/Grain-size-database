@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   _initPhiToggle();
   _initCoordInputs();
   _initFormValidation();
-  _renderBinTable('full');
+  _renderBinTable(_getPhiInterval(), _getMinOpeningMm());
 });
 
 // ---------------------------------------------------------------------------
@@ -44,10 +44,7 @@ function _initSubmitMap() {
     zoomControl:  true,
   });
 
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    maxZoom:     19,
-  }).addTo(submitMap);
+  _addBasemapWithFallback(submitMap);
 
   submitMap.on('click', (e) => {
     _setLocation(e.latlng.lat, e.latlng.lng);
@@ -94,9 +91,17 @@ function _initCoordInputs() {
 // ---------------------------------------------------------------------------
 
 function _initPhiToggle() {
+  const minOpeningSelect = document.getElementById('min_opening_mm');
+  if (minOpeningSelect) {
+    minOpeningSelect.addEventListener('change', () => {
+      _renderBinTable(_getPhiInterval(), _getMinOpeningMm());
+      _updatePreview();
+    });
+  }
+
   document.querySelectorAll('input[name="phi_interval"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
-      _renderBinTable(e.target.value);
+      _renderBinTable(e.target.value, _getMinOpeningMm());
       _updatePreview();
     });
   });
@@ -105,40 +110,70 @@ function _initPhiToggle() {
 /**
  * Render (or re-render) the grain-size count input table.
  * @param {'full'|'half'} interval
+ * @param {number} minOpeningMm
  */
-function _renderBinTable(interval) {
-  const bins  = interval === 'half' ? BINS_HALF : BINS_FULL;
+function _renderBinTable(interval, minOpeningMm) {
+  const bins  = getBinsForIntervalAndMin(interval, minOpeningMm);
   const tbody = document.getElementById('bin-table-body');
   if (!tbody) return;
 
   const previousCounts = {};
+  const previousPercentages = {};
+  const previousPctManual = {};
   tbody.querySelectorAll('.bin-count').forEach(input => {
     const key = input.dataset.binKey;
     if (!key) return;
     previousCounts[key] = Math.max(0, parseInt(input.value, 10) || 0);
   });
+  tbody.querySelectorAll('.bin-pct').forEach(input => {
+    const key = input.dataset.binKey;
+    if (!key) return;
+    previousPercentages[key] = input.value;
+    previousPctManual[key] = input.dataset.manual === 'true';
+  });
 
   tbody.innerHTML = '';
   bins.forEach(bin => {
     const count = previousCounts[bin.key] ?? 0;
+    const pctVal = previousPercentages[bin.key] ?? '';
+    const pctManual = previousPctManual[bin.key] ? 'true' : 'false';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="text-nowrap">${bin.label}</td>
-      <td class="text-muted small text-nowrap">${bin.phiLabel}</td>
       <td>
         <input type="number" class="form-control form-control-sm bin-count text-end"
                id="bin-${_idSafe(bin.key)}"
                data-bin-key="${bin.key}"
                min="0" step="1" value="${count}"
                aria-label="${bin.label} count">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm bin-pct text-end"
+               id="bin-pct-${_idSafe(bin.key)}"
+               data-bin-key="${bin.key}"
+               data-manual="${pctManual}"
+               min="0" max="100" step="0.1" value="${pctVal}"
+               placeholder="auto"
+               aria-label="${bin.label} percent">
       </td>`;
     tbody.appendChild(tr);
   });
 
   // Live update the preview when any count changes.
   tbody.querySelectorAll('.bin-count').forEach(input => {
-    input.addEventListener('input', _updatePreview);
+    input.addEventListener('input', () => {
+      _recalculatePercentages();
+      _updatePreview();
+    });
   });
+  tbody.querySelectorAll('.bin-pct').forEach(input => {
+    input.addEventListener('input', () => {
+      const hasValue = input.value.trim() !== '';
+      input.dataset.manual = hasValue ? 'true' : 'false';
+      if (!hasValue) _recalculatePercentages();
+    });
+  });
+  _recalculatePercentages();
 }
 
 // ---------------------------------------------------------------------------
@@ -238,7 +273,7 @@ function _initFormValidation() {
       form.reset();
       draftSampleId = null;
       form.classList.remove('was-validated');
-      _renderBinTable(_getPhiInterval());
+      _renderBinTable(_getPhiInterval(), _getMinOpeningMm());
       if (locationMarker) { submitMap.removeLayer(locationMarker); locationMarker = null; }
       const previewSection = document.getElementById('preview-section');
       if (previewSection) previewSection.classList.add('d-none');
@@ -274,12 +309,26 @@ function _initFormValidation() {
  */
 function _buildSampleFromForm() {
   const interval = _getPhiInterval();
-  const bins     = interval === 'half' ? BINS_HALF : BINS_FULL;
+  const minOpeningMm = _getMinOpeningMm();
+  const bins     = getBinsForIntervalAndMin(interval, minOpeningMm);
 
   const counts = {};
+  const percentages = {};
+  let total = 0;
   bins.forEach(bin => {
     const el = document.getElementById(`bin-${_idSafe(bin.key)}`);
-    counts[bin.key] = el ? Math.max(0, parseInt(el.value, 10) || 0) : 0;
+    const count = el ? Math.max(0, parseInt(el.value, 10) || 0) : 0;
+    counts[bin.key] = count;
+    total += count;
+  });
+  bins.forEach(bin => {
+    const pctEl = document.getElementById(`bin-pct-${_idSafe(bin.key)}`);
+    const pctRaw = pctEl ? parseFloat(pctEl.value) : NaN;
+    if (Number.isFinite(pctRaw)) {
+      percentages[bin.key] = Math.max(0, Math.min(100, pctRaw));
+      return;
+    }
+    percentages[bin.key] = total > 0 ? parseFloat(((counts[bin.key] / total) * 100).toFixed(1)) : 0;
   });
 
   const photoUrlsRaw = document.getElementById('photo_urls')?.value || '';
@@ -304,8 +353,10 @@ function _buildSampleFromForm() {
     date_collected:   document.getElementById('date_collected')?.value          || '',
     landform:         document.getElementById('landform')?.value                || '',
     surface_condition:document.getElementById('surface_condition')?.value       || '',
+    min_opening_mm:   minOpeningMm,
     phi_interval:     interval,
     counts,
+    percentages,
     qc_checked:       false,
     qc_checked_at:    '',
     qc_checked_by:    '',
@@ -321,6 +372,32 @@ function _buildSampleFromForm() {
 
 function _getPhiInterval() {
   return document.querySelector('input[name="phi_interval"]:checked')?.value || 'full';
+}
+
+function _getMinOpeningMm() {
+  const raw = parseFloat(document.getElementById('min_opening_mm')?.value);
+  return Number.isFinite(raw) && raw > 0 ? raw : 2;
+}
+
+function _recalculatePercentages() {
+  const tbody = document.getElementById('bin-table-body');
+  if (!tbody) return;
+
+  let total = 0;
+  const rows = [];
+  tbody.querySelectorAll('tr').forEach(row => {
+    const countInput = row.querySelector('.bin-count');
+    const pctInput = row.querySelector('.bin-pct');
+    if (!countInput || !pctInput) return;
+    const count = Math.max(0, parseInt(countInput.value, 10) || 0);
+    total += count;
+    rows.push({ countInput, pctInput, count });
+  });
+
+  rows.forEach(({ pctInput, count }) => {
+    if (pctInput.dataset.manual === 'true') return;
+    pctInput.value = total > 0 ? ((count / total) * 100).toFixed(1) : '';
+  });
 }
 
 function _showAlert(html, type) {
@@ -376,6 +453,27 @@ function _contributorIdFromEmail(email) {
   for (let i = 0; i < value.length; i++) {
     hash = ((hash << 5) + hash) + value.charCodeAt(i);
     hash &= 0xffffffff;
+  }
+
+  function _addBasemapWithFallback(targetMap) {
+    let switched = false;
+    const esri = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19,
+      },
+    );
+    esri.on('tileerror', () => {
+      if (switched) return;
+      switched = true;
+      targetMap.removeLayer(esri);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(targetMap);
+    });
+    esri.addTo(targetMap);
   }
   return `contrib-${(hash >>> 0).toString(16)}`;
 }

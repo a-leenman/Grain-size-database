@@ -180,9 +180,9 @@ function samplesToCSV(samples) {
   const headers = [
     'id', 'timestamp', 'date_collected', 'collector', 'institution',
     'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
-    'landform', 'surface_condition', 'phi_interval',
+    'landform', 'surface_condition', 'min_opening_mm', 'phi_interval',
     'total_count', 'D10_mm', 'D50_mm', 'D84_mm', 'qc_checked', 'qc_checked_at', 'qc_checked_by',
-    'notes', 'photo_urls',
+    'notes', 'photo_urls', 'percentages_json',
   ];
 
   const rows = samples.map(s => {
@@ -210,6 +210,7 @@ function samplesToCSV(samples) {
       _csvEsc(pub.location?.description ?? ''),
       pub.landform,
       pub.surface_condition,
+      pub.min_opening_mm ?? 0.5,
       pub.phi_interval,
       total,
       d10, d50, d84,
@@ -218,6 +219,7 @@ function samplesToCSV(samples) {
       _csvEsc(pub.qc_checked_by || ''),
       _csvEsc(pub.notes ?? ''),
       _csvEsc(photos),
+      _csvEsc(JSON.stringify(pub.percentages || {})),
     ].join(',');
   });
 

@@ -40,10 +40,7 @@ function _initMap() {
   });
 
   // Base tile layer (Esri World Imagery)
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    maxZoom:     19,
-  }).addTo(map);
+  _addBasemapWithFallback(map);
 
   // Layer for all sample markers
   markersLayer = L.featureGroup().addTo(map);
@@ -193,6 +190,8 @@ function _buildPopupContent(sample) {
   const qcDetail  = qcChecked && (qcBy || qcAt)
     ? ` (${[qcBy, qcAt].filter(Boolean).join(' • ')})`
     : '';
+  const minOpening = Number.parseFloat(sample.min_opening_mm);
+  const minOpeningLabel = Number.isFinite(minOpening) && minOpening > 0 ? `${minOpening} mm` : '0.5 mm';
   const qcToggleHtml = _isAdminSignedIn() && sample.id
     ? `<button class="btn btn-sm btn-outline-dark mt-1" onclick="toggleSampleQC(${JSON.stringify(sample.id)}, ${qcChecked ? 'false' : 'true'})">${qcChecked ? 'Mark as not QC checked' : 'Mark as QC checked'}</button>`
     : '';
@@ -230,6 +229,9 @@ function _buildPopupContent(sample) {
           <tr>
             <td><b>n</b></td><td colspan="2">${total} clasts</td>
             <td><b>Phi</b></td><td colspan="2">${sample.phi_interval === 'half' ? '½ φ' : '1 φ'}</td>
+          </tr>
+          <tr>
+            <td><b>Min size</b></td><td colspan="5">${minOpeningLabel}</td>
           </tr>
           <tr>
             <td><b>QC</b></td><td colspan="5">${qcLabel}${qcDetail}</td>
@@ -435,6 +437,27 @@ function _safeExternalUrl(value) {
     return parsed.toString();
   } catch {
     return null;
+  }
+
+  function _addBasemapWithFallback(targetMap) {
+    let switched = false;
+    const esri = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19,
+      },
+    );
+    esri.on('tileerror', () => {
+      if (switched) return;
+      switched = true;
+      targetMap.removeLayer(esri);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(targetMap);
+    });
+    esri.addTo(targetMap);
   }
 }
 

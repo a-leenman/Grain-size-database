@@ -55,18 +55,24 @@ function mmToKey(mm) {
  * Generate the array of size-class bins for a given phi interval.
  *
  * @param {boolean} halfPhi  true → 0.5 φ intervals; false → 1 φ intervals
+ * @param {number}  [minOpeningMm=0.5]  minimum measured opening size (mm)
  * @returns {Array<Object>}  ordered from finest to coarsest
  */
-function generateBins(halfPhi) {
+function generateBins(halfPhi, minOpeningMm = 0.5) {
   const interval = halfPhi ? 0.5 : 1.0;
   const bins = [];
+  const minMm = Number.isFinite(minOpeningMm) && minOpeningMm > 0 ? minOpeningMm : 0.5;
 
-  // Build phi boundary array from +1 φ (= 0.5 mm) down to -8 φ (= 256 mm),
+  // Build phi boundary array from selected minimum opening down to -8 φ (= 256 mm),
   // stepping by `interval`.
   const phiBoundaries = [];
   const eps = 1e-9; // floating-point guard
-  for (let phi = 1.0; phi >= -8.0 - eps; phi -= interval) {
+  const startPhi = -Math.log2(minMm);
+  for (let phi = startPhi; phi >= -8.0 - eps; phi -= interval) {
     phiBoundaries.push(parseFloat(phi.toFixed(4)));
+  }
+  if (!phiBoundaries.length || phiBoundaries[phiBoundaries.length - 1] > -8.0 + eps) {
+    phiBoundaries.push(-8.0);
   }
   // Convert to mm (D = 2^(−phi)).
   const mmBoundaries = phiBoundaries.map(p => Math.pow(2, -p));
@@ -114,8 +120,22 @@ function generateBins(halfPhi) {
 }
 
 /** Pre-built bin arrays (generated once on load). */
-const BINS_FULL = generateBins(false);
-const BINS_HALF = generateBins(true);
+const BINS_FULL = generateBins(false, 0.5);
+const BINS_HALF = generateBins(true, 0.5);
+const _binsCache = new Map([
+  ['full|0.5', BINS_FULL],
+  ['half|0.5', BINS_HALF],
+]);
+
+function getBinsForIntervalAndMin(interval, minOpeningMm) {
+  const mode = interval === 'half' ? 'half' : 'full';
+  const minMm = Number.isFinite(minOpeningMm) && minOpeningMm > 0 ? minOpeningMm : 0.5;
+  const key = `${mode}|${minMm}`;
+  if (_binsCache.has(key)) return _binsCache.get(key);
+  const bins = generateBins(mode === 'half', minMm);
+  _binsCache.set(key, bins);
+  return bins;
+}
 
 /**
  * Return the correct bin array for a sample.
@@ -123,7 +143,12 @@ const BINS_HALF = generateBins(true);
  * @returns {Array<Object>}
  */
 function getBinsForSample(sample) {
-  return sample.phi_interval === 'half' ? BINS_HALF : BINS_FULL;
+  const interval = sample?.phi_interval === 'half' ? 'half' : 'full';
+  const minOpening = Number.parseFloat(sample?.min_opening_mm);
+  if (!Number.isFinite(minOpening) || minOpening <= 0 || minOpening === 0.5) {
+    return interval === 'half' ? BINS_HALF : BINS_FULL;
+  }
+  return getBinsForIntervalAndMin(interval, minOpening);
 }
 
 // ---------------------------------------------------------------------------
