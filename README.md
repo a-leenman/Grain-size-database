@@ -9,7 +9,8 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 | Feature | Details |
 |---|---|
 | **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. |
-| **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs); choose full-phi or half-phi size bins; enter grain counts. |
+| **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs), and choose whether your name+institution can be publicly acknowledged; choose full-phi or half-phi size bins; enter grain counts. |
+| **Contributors page** | Lists contributor names and institutions only for submissions where contributors opted in to public acknowledgement. |
 | **Live CDF preview** | Cumulative distribution (% finer than vs. grain size in mm, log scale) drawn in real time as you enter counts. |
 | **Download data** | Download the full database as CSV or JSON. Every dataset download also includes a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago), including area-selected downloads from drawn rectangles. |
 | **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets. |
@@ -34,6 +35,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 ```
 ├── index.html              Explore / map view (landing page)
 ├── submit.html             Submit new sample
+├── contributors.html       Public contributor acknowledgements
 ├── css/
 │   └── style.css           All styles
 ├── js/
@@ -42,7 +44,9 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 │   ├── cdf.js              Chart.js CDF rendering
 │   ├── data.js             Data load / save (localStorage + API)
 │   ├── map-explore.js      Explore-page map logic
-│   └── submit.js           Submit-form logic
+│   ├── submit.js           Submit-form logic
+│   ├── contributors.js     Contributors page logic
+│   └── welcome.js          Opening welcome modal
 ├── data/
 │   └── samples.json        Static sample database (read by the map page)
 ├── apps-script/
@@ -113,6 +117,7 @@ You can also add samples by editing `data/samples.json` directly. Each entry fol
   "timestamp":        "2024-04-10T09:15:00Z",
   "collector":        "Jane Smith",
   "institution":      "University of Bristol",
+  "allow_public_acknowledgement": true,
   "river_name":       "River Wye",
   "paper_doi":        "10.1000/xyz123",
   "date_collected":   "2024-04-10",

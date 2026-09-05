@@ -33,7 +33,7 @@ const DX_PRECISION = 2;
 // ── Column headers written to the sheet ────────────────────────────────────
 const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
-  'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
+  'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
   'landform', 'surface_condition', 'phi_interval',
   'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
   'notes', 'photo_urls',
@@ -127,6 +127,7 @@ function _appendSample(sample) {
     sample.date_collected || '',
     sample.collector || '',
     sample.institution || '',
+    _toBool(sample.allow_public_acknowledgement),
     sample.river_name || '',
     sample.paper_doi || '',
     Number.isFinite(lat) ? lat : '',
@@ -183,6 +184,7 @@ function _getAllSamples() {
       date_collected:    obj.date_collected,
       collector:         obj.collector,
       institution:       obj.institution,
+      allow_public_acknowledgement: _toBool(obj.allow_public_acknowledgement),
       river_name:        obj.river_name,
       paper_doi:         obj.paper_doi || '',
       location: {
@@ -252,6 +254,16 @@ function _generateBoundaries(interval) {
   const phiList = [];
   for (let phi = 1.0; phi >= -8.0 - eps; phi -= interval) {
     phiList.push(parseFloat(phi.toFixed(4)));
+  }
+
+  function _toBool(value) {
+    if (value === true || value === false) return value;
+    if (typeof value === 'string') {
+      const v = value.trim().toLowerCase();
+      return v === 'true' || v === '1' || v === 'yes';
+    }
+    if (typeof value === 'number') return value === 1;
+    return false;
   }
   const mmList = phiList.map(p => Math.pow(2, -p));
 

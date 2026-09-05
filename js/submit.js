@@ -295,6 +295,7 @@ function _buildSampleFromForm() {
     id:               draftSampleId || undefined,
     collector:        document.getElementById('collector')?.value.trim()        || '',
     institution:      document.getElementById('institution')?.value.trim()      || '',
+    allow_public_acknowledgement: !!document.getElementById('allow_public_acknowledgement')?.checked,
     paper_doi:        document.getElementById('paper_doi')?.value.trim()        || '',
     river_name:       document.getElementById('river_name')?.value.trim()       || '',
     date_collected:   document.getElementById('date_collected')?.value          || '',
