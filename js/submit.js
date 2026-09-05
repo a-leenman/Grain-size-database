@@ -271,6 +271,7 @@ function _buildSampleFromForm() {
   return {
     collector:        document.getElementById('collector')?.value.trim()        || '',
     institution:      document.getElementById('institution')?.value.trim()      || '',
+    paper_doi:        document.getElementById('paper_doi')?.value.trim()        || '',
     river_name:       document.getElementById('river_name')?.value.trim()       || '',
     date_collected:   document.getElementById('date_collected')?.value          || '',
     landform:         document.getElementById('landform')?.value                || '',

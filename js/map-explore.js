@@ -175,6 +175,9 @@ function _buildPopupContent(sample) {
   const river     = _esc(sample.river_name || '–');
   const collector = _esc(sample.collector  || '–');
   const inst      = _esc(sample.institution || '');
+  const rawDoi    = (sample.paper_doi || '').trim();
+  const doi       = _esc(rawDoi);
+  const doiHref   = _esc(`https://doi.org/${rawDoi}`);
   const notes     = _esc(sample.notes || '');
 
   const statsRow = (d10 != null && d50 != null && d84 != null)
@@ -201,6 +204,7 @@ function _buildPopupContent(sample) {
             <td colspan="${inst ? '3' : '5'}">${collector}</td>
             ${inst ? `<td><b>Institution</b></td><td colspan="1">${inst}</td>` : ''}
           </tr>
+          ${doi ? `<tr><td><b>DOI</b></td><td colspan="5"><a href="${doiHref}" target="_blank">${doi}</a></td></tr>` : ''}
           <tr>
             <td><b>Landform</b></td><td colspan="2">${landform}</td>
             <td><b>Surface</b></td><td colspan="2">${condition}</td>
@@ -314,13 +318,14 @@ function downloadAllJSON() {
   downloadFile(samplesToJSON(), 'grain-size-samples.json', 'application/json');
 }
 
-function downloadAreaData() {
+async function downloadAreaData() {
   if (!selectedSamples) return;
   downloadFile(
     samplesToCSV(selectedSamples),
     'grain-size-samples-area.csv',
     'text/csv;charset=utf-8;',
   );
+  await downloadBibliographyForSamples(selectedSamples, 'grain-size-samples-area-references.txt');
 }
 
 // ---------------------------------------------------------------------------

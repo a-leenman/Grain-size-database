@@ -136,7 +136,7 @@ function samplesToCSV(samples) {
 
   const headers = [
     'id', 'timestamp', 'date_collected', 'collector', 'institution',
-    'river_name', 'lat', 'lng', 'location_description',
+    'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
     'landform', 'surface_condition', 'phi_interval',
     'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
     'notes', 'photo_urls',
@@ -157,6 +157,7 @@ function samplesToCSV(samples) {
       _csvEsc(s.collector),
       _csvEsc(s.institution),
       _csvEsc(s.river_name),
+      _csvEsc(normalizeSampleDOI(s.paper_doi) || ''),
       s.location?.lat ?? '',
       s.location?.lng ?? '',
       _csvEsc(s.location?.description ?? ''),
@@ -196,6 +197,58 @@ function downloadFile(content, filename, mime) {
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Return a normalised DOI string (without https://doi.org/ prefix).
+ * Returns an empty string if the value does not look like a DOI.
+ */
+function normalizeSampleDOI(value) {
+  if (!value) return '';
+  let doi = String(value).trim();
+  doi = doi.replace(/^doi:\s*/i, '');
+  doi = doi.replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
+  doi = doi.replace(/^https?:\/\/doi\.org\//i, '');
+  doi = doi.replace(/\s+/g, '');
+  if (!/^10\.\S+\/\S+$/i.test(doi)) return '';
+  return doi;
+}
+
+function getUniqueSampleDois(samples) {
+  const out = [];
+  const seen = new Set();
+  (samples || []).forEach(sample => {
+    const doi = normalizeSampleDOI(sample?.paper_doi);
+    if (!doi) return;
+    const key = doi.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push(doi);
+    }
+  });
+  return out;
+}
+
+async function downloadBibliographyForSamples(samples, filename = 'grain-size-references.txt') {
+  const dois = getUniqueSampleDois(samples);
+  if (!dois.length) return { ok: false, reason: 'no-doi' };
+
+  const citations = [];
+  for (const doi of dois) {
+    citations.push(await _buildCitation(doi));
+  }
+
+  const content = [
+    'Riverbed Grain Size Database bibliography',
+    `Generated: ${new Date().toISOString()}`,
+    `Studies: ${dois.length}`,
+    '',
+    ...citations.map((c, i) => `${i + 1}. ${c}`),
+    '',
+  ].join('\n');
+
+  downloadFile(content, filename, 'text/plain;charset=utf-8;');
+  return { ok: true, count: dois.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +299,44 @@ function _csvEsc(str) {
   const s = String(str);
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  async function _buildCitation(doi) {
+    try {
+      const res = await fetch(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const message = data?.message || {};
+
+      const authors = _formatCitationAuthors(message.author || []);
+      const year = message?.issued?.['date-parts']?.[0]?.[0] || 'n.d.';
+      const title = (message.title && message.title[0]) || 'Untitled';
+      const journal = (message['container-title'] && message['container-title'][0]) || '';
+      const volume = message.volume ? ` ${message.volume}` : '';
+      const issue = message.issue ? `(${message.issue})` : '';
+      const page = message.page ? `, ${message.page}` : '';
+
+      let citation = `${authors} (${year}). ${title}.`;
+      if (journal) citation += ` ${journal}${volume}${issue}${page}.`;
+      citation += ` https://doi.org/${doi}`;
+      return citation.replace(/\s+/g, ' ').trim();
+    } catch {
+      return `https://doi.org/${doi}`;
+    }
+  }
+
+  function _formatCitationAuthors(authors) {
+    if (!authors.length) return 'Unknown author';
+    const names = authors.map(a => {
+      const family = (a.family || '').trim();
+      const given = (a.given || '').trim();
+      if (family && given) return `${family}, ${given}`;
+      return family || given || '';
+    }).filter(Boolean);
+    if (!names.length) return 'Unknown author';
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `${names[0]} & ${names[1]}`;
+    return `${names[0]} et al.`;
   }
   return s;
 }
