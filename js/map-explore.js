@@ -19,7 +19,7 @@ let map;                  // Leaflet map instance
 let markersLayer;         // FeatureGroup holding all sample markers
 let selectedSamples;      // Samples within the drawn area (or null = all)
 let activePopupCanvas;    // The canvas whose Chart lives in the open popup
-let adminToken = sessionStorage.getItem('gsdAdminToken') || '';
+let adminToken = '';
 
 // ---------------------------------------------------------------------------
 // Initialisation
@@ -406,13 +406,11 @@ function adminSignIn() {
   const token = window.prompt('Enter admin token to enable QC controls:');
   if (!token) return;
   adminToken = token.trim();
-  sessionStorage.setItem('gsdAdminToken', adminToken);
   _syncAdminUi();
 }
 
 function adminSignOut() {
   adminToken = '';
-  sessionStorage.removeItem('gsdAdminToken');
   _syncAdminUi();
 }
 

@@ -41,7 +41,8 @@ function _collectContributors(samples) {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
     const name = String(sample?.collector || '').trim();
     const institution = String(sample?.institution || '').trim();
-    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase();
+    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase()
+      || `${name.toLowerCase()}|${institution.toLowerCase()}`;
     if (!name || !contributorId) { skipped += 1; return; }
     if (!outByKey.has(contributorId)) {
       outByKey.set(contributorId, { name, institution, sampleCount: 0 });

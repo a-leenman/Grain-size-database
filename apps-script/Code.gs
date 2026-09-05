@@ -68,6 +68,7 @@ function _toPublicSample(sample) {
   if (!_toBool(out.allow_public_acknowledgement)) {
     out.collector = '';
     out.institution = '';
+    out.contributor_id = '';
   }
   delete out.contributor_email;
   return out;
