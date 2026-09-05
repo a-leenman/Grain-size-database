@@ -111,8 +111,16 @@ function _renderBinTable(interval) {
   const tbody = document.getElementById('bin-table-body');
   if (!tbody) return;
 
+  const previousCounts = {};
+  tbody.querySelectorAll('.bin-count').forEach(input => {
+    const key = input.dataset.binKey;
+    if (!key) return;
+    previousCounts[key] = Math.max(0, parseInt(input.value, 10) || 0);
+  });
+
   tbody.innerHTML = '';
   bins.forEach(bin => {
+    const count = previousCounts[bin.key] ?? 0;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="text-nowrap">${bin.label}</td>
@@ -121,7 +129,7 @@ function _renderBinTable(interval) {
         <input type="number" class="form-control form-control-sm bin-count text-end"
                id="bin-${_idSafe(bin.key)}"
                data-bin-key="${bin.key}"
-               min="0" step="1" value="0"
+               min="0" step="1" value="${count}"
                aria-label="${bin.label} count">
       </td>`;
     tbody.appendChild(tr);

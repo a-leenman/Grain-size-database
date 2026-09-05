@@ -93,11 +93,11 @@ const CONFIG = {
 Commit and push. The site will now POST new samples to your Google Sheet and
 read all samples from the API on page load.
 
-### 4 – Sync to OneDrive (optional)
+### 4 – OneDrive copy (optional)
 
-- Install [Google Drive for Desktop](https://www.google.com/drive/download/).
-- Place the Google Sheet in a folder that is synced to your university OneDrive.
-- Every submission will be mirrored to OneDrive automatically.
+- Open the Google Sheet used by Apps Script.
+- Use **File → Download → Microsoft Excel (.xlsx)** to export a snapshot.
+- Upload that `.xlsx` file to OneDrive when you want to share/update a copy there.
 
 ---
 

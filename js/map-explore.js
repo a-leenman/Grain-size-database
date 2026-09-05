@@ -191,6 +191,7 @@ function _buildPopupContent(sample) {
     : '';
 
   const photosHtml = (sample.photo_urls || [])
+    .map(u => _safeExternalUrl(u))
     .filter(Boolean)
     .map(u => `<a href="${_esc(u)}" target="_blank" rel="noopener noreferrer" class="me-1">📷 Photo</a>`)
     .join('');
@@ -362,4 +363,15 @@ function _esc(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;
+}
+
+function _safeExternalUrl(value) {
+  if (!value) return null;
+  try {
+    const parsed = new URL(String(value).trim());
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
