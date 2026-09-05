@@ -285,6 +285,7 @@ function _buildSampleFromForm() {
   const photoUrlsRaw = document.getElementById('photo_urls')?.value || '';
   const photo_urls   = photoUrlsRaw.split('\n')
     .map(u => u.trim()).filter(Boolean);
+  const contributorEmail = document.getElementById('contributor_email')?.value.trim() || '';
 
   const latRaw = parseFloat(document.getElementById('lat')?.value);
   const lngRaw = parseFloat(document.getElementById('lng')?.value);
@@ -294,7 +295,8 @@ function _buildSampleFromForm() {
   return {
     id:               draftSampleId || undefined,
     collector:        document.getElementById('collector')?.value.trim()        || '',
-    contributor_email:document.getElementById('contributor_email')?.value.trim() || '',
+    contributor_email: contributorEmail,
+    contributor_id:   _contributorIdFromEmail(contributorEmail),
     institution:      document.getElementById('institution')?.value.trim()      || '',
     allow_public_acknowledgement: !!document.getElementById('allow_public_acknowledgement')?.checked,
     paper_doi:        document.getElementById('paper_doi')?.value.trim()        || '',
@@ -362,4 +364,15 @@ function _esc(str) {
   const d = document.createElement('div');
   d.textContent = str == null ? '' : String(str);
   return d.innerHTML;
+}
+
+function _contributorIdFromEmail(email) {
+  const value = String(email || '').trim().toLowerCase();
+  if (!value) return '';
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash) + value.charCodeAt(i);
+    hash &= 0xffffffff;
+  }
+  return `contrib-${(hash >>> 0).toString(16)}`;
 }

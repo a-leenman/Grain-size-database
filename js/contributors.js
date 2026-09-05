@@ -38,14 +38,14 @@ function _collectContributors(samples) {
 
   (samples || []).forEach(sample => {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
-    const email = _normalizeEmail(sample?.contributor_email);
+    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase();
     const name = String(sample?.collector || '').trim();
-    if (!email || !name) return;
+    if (!contributorId || !name) return;
     const institution = String(sample?.institution || '').trim();
-    if (!outByKey.has(email)) {
-      outByKey.set(email, { name, institution, sampleCount: 0 });
+    if (!outByKey.has(contributorId)) {
+      outByKey.set(contributorId, { name, institution, sampleCount: 0 });
     }
-    const item = outByKey.get(email);
+    const item = outByKey.get(contributorId);
     item.sampleCount += 1;
     if (!item.institution && institution) item.institution = institution;
     if (item.name !== name && name) item.name = name;
@@ -55,12 +55,6 @@ function _collectContributors(samples) {
     if (b.sampleCount !== a.sampleCount) return b.sampleCount - a.sampleCount;
     return a.name.localeCompare(b.name);
   });
-}
-
-function _normalizeEmail(value) {
-  const email = String(value || '').trim().toLowerCase();
-  if (!email) return '';
-  return email;
 }
 
 function _asBool(value) {

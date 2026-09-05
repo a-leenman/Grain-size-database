@@ -116,6 +116,7 @@ You can also add samples by editing `data/samples.json` directly. Each entry fol
   "collector":        "Jane Smith",
   "institution":      "University of Bristol",
   "contributor_email":"jane.smith@example.edu",
+  "contributor_id":   "contrib-xxxxxxxx",
   "allow_public_acknowledgement": true,
   "river_name":       "River Wye",
   "paper_doi":        "10.1000/xyz123",

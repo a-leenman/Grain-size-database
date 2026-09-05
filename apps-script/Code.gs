@@ -12,8 +12,8 @@
  *    • Execute as: Me (your Google account)
  *    • Who has access: Anyone
  * 6. Copy the deployment URL and set CONFIG.API_URL in js/config.js.
- * 7. (Optional) To sync to OneDrive: enable Google Drive sync with your
- *    university OneDrive account, and place the Sheet in a synced folder.
+ * 7. (Optional) Export a copy from Google Sheets when you need to share a
+ *    snapshot in OneDrive.
  *
  * ENDPOINTS
  * ─────────
@@ -31,7 +31,7 @@ const DX_PRECISION = 2;
 // ── Column headers written to the sheet ────────────────────────────────────
 const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
-  'contributor_email', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
+  'contributor_email', 'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
   'landform', 'surface_condition', 'phi_interval',
   'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
   'notes', 'photo_urls',
@@ -46,13 +46,53 @@ function _corsResponse(data) {
   return output;
 }
 
+function _normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function _contributorIdFromEmail(email) {
+  const value = _normalizeEmail(email);
+  if (!value) return '';
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash) + value.charCodeAt(i);
+    hash &= 0xffffffff;
+  }
+  return 'contrib-' + (hash >>> 0).toString(16);
+}
+
+function _toPublicSample(sample) {
+  const out = Object.assign({}, sample);
+  if (!_toBool(out.allow_public_acknowledgement)) {
+    out.collector = '';
+    out.institution = '';
+  }
+  delete out.contributor_email;
+  return out;
+}
+
+function _isValidSample(sample) {
+  const requiredText = ['id', 'collector', 'river_name', 'date_collected', 'landform', 'surface_condition', 'phi_interval'];
+  for (let i = 0; i < requiredText.length; i++) {
+    const key = requiredText[i];
+    if (!String(sample[key] || '').trim()) return false;
+  }
+  const lat = sample.location && sample.location.lat;
+  const lng = sample.location && sample.location.lng;
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) return false;
+  if (!Number.isFinite(lng) || lng < -180 || lng > 180) return false;
+  if (!sample.counts || typeof sample.counts !== 'object') return false;
+  const total = Object.keys(sample.counts).reduce((sum, k) => sum + (parseInt(sample.counts[k], 10) || 0), 0);
+  return total > 0;
+}
+
 // ── GET handler ─────────────────────────────────────────────────────────────
 function doGet(e) {
   const action = (e && e.parameter && e.parameter.action) || 'getData';
 
   if (action === 'getData') {
     try {
-      const samples = _getAllSamples();
+      const samples = _getAllSamples().map(_toPublicSample);
       return _corsResponse({ status: 'ok', samples });
     } catch (err) {
       return _corsResponse({ status: 'error', message: err.message });
@@ -74,6 +114,9 @@ function doPost(e) {
     const sample = payload.data;
     if (!sample || !sample.id) {
       return _corsResponse({ status: 'error', message: 'Invalid sample data' });
+    }
+    if (!_isValidSample(sample)) {
+      return _corsResponse({ status: 'error', message: 'Sample failed validation checks' });
     }
 
     _appendSample(sample);
@@ -118,7 +161,8 @@ function _appendSample(sample) {
     sample.date_collected || '',
     sample.collector || '',
     sample.institution || '',
-    (sample.contributor_email || '').toLowerCase(),
+    _normalizeEmail(sample.contributor_email),
+    sample.contributor_id || _contributorIdFromEmail(sample.contributor_email),
     _toBool(sample.allow_public_acknowledgement),
     sample.river_name || '',
     sample.paper_doi || '',
@@ -177,6 +221,7 @@ function _getAllSamples() {
       collector:         obj.collector,
       institution:       obj.institution,
       contributor_email: obj.contributor_email || '',
+      contributor_id:    obj.contributor_id || _contributorIdFromEmail(obj.contributor_email),
       allow_public_acknowledgement: _toBool(obj.allow_public_acknowledgement),
       river_name:        obj.river_name,
       paper_doi:         obj.paper_doi || '',

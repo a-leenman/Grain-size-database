@@ -34,7 +34,7 @@ async function loadSamples() {
       if (res.ok) {
         const json = await res.json();
         const remote = Array.isArray(json) ? json : (json.samples || []);
-        _cache = _mergeWithLocal(remote);
+        _cache = _mergeWithLocal(remote).map(_toPublicSample);
         return _cache;
       }
     } catch (err) {
@@ -48,7 +48,7 @@ async function loadSamples() {
     if (res.ok) {
       const json = await res.json();
       const remote = Array.isArray(json) ? json : (json.samples || []);
-      _cache = _mergeWithLocal(remote);
+      _cache = _mergeWithLocal(remote).map(_toPublicSample);
       return _cache;
     }
   } catch (err) {
@@ -56,7 +56,7 @@ async function loadSamples() {
   }
 
   // --- 3. Fall back to localStorage only -------------------------------------
-  _cache = _loadLocal();
+  _cache = _loadLocal().map(_toPublicSample);
   return _cache;
 }
 
@@ -91,9 +91,10 @@ async function saveSample(sample) {
   // Always persist locally.
   _saveLocal(sample);
   if (_cache) {
+    const publicSample = _toPublicSample(sample);
     const idx = _cache.findIndex(s => s.id === sample.id);
-    if (idx >= 0) _cache[idx] = sample;
-    else _cache.push(sample);
+    if (idx >= 0) _cache[idx] = publicSample;
+    else _cache.push(publicSample);
   }
 
   // If an API is configured, also send to the backend.
@@ -111,6 +112,7 @@ async function saveSample(sample) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       if (json.status !== 'ok') throw new Error(json.message || 'Unknown error');
+      _removeLocalById(sample.id);
       return { ok: true, message: 'Sample saved to the database.' };
     } catch (err) {
       return {
@@ -143,40 +145,41 @@ function samplesToCSV(samples) {
 
   const headers = [
     'id', 'timestamp', 'date_collected', 'collector', 'institution',
-    'contributor_email', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
+    'contributor_id', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
     'landform', 'surface_condition', 'phi_interval',
     'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
     'notes', 'photo_urls',
   ];
 
   const rows = samples.map(s => {
+    const pub = _toPublicSample(s);
     const cdf     = computeCDF(s);
     const total   = Object.values(s.counts || {}).reduce((a, b) => a + b, 0);
     const d10     = getDx(cdf, 10)  ?? '';
     const d50     = getDx(cdf, 50)  ?? '';
     const d84     = getDx(cdf, 84)  ?? '';
-    const photos  = (s.photo_urls || []).join('; ');
-    const paperDoi = (s.paper_doi || '').trim();
+    const photos  = (pub.photo_urls || []).join('; ');
+    const paperDoi = (pub.paper_doi || '').trim();
 
     return [
-      s.id,
-      s.timestamp,
-      s.date_collected,
-      _csvEsc(s.collector),
-      _csvEsc(s.institution),
-      _csvEsc((s.contributor_email || '').trim()),
-      s.allow_public_acknowledgement ? 'true' : 'false',
-      _csvEsc(s.river_name),
+      pub.id,
+      pub.timestamp,
+      pub.date_collected,
+      _csvEsc(pub.collector),
+      _csvEsc(pub.institution),
+      _csvEsc((pub.contributor_id || '').trim()),
+      pub.allow_public_acknowledgement ? 'true' : 'false',
+      _csvEsc(pub.river_name),
       _csvEsc(paperDoi),
-      s.location?.lat ?? '',
-      s.location?.lng ?? '',
-      _csvEsc(s.location?.description ?? ''),
-      s.landform,
-      s.surface_condition,
-      s.phi_interval,
+      pub.location?.lat ?? '',
+      pub.location?.lng ?? '',
+      _csvEsc(pub.location?.description ?? ''),
+      pub.landform,
+      pub.surface_condition,
+      pub.phi_interval,
       total,
       d10, d50, d84,
-      _csvEsc(s.notes ?? ''),
+      _csvEsc(pub.notes ?? ''),
       _csvEsc(photos),
     ].join(',');
   });
@@ -190,7 +193,7 @@ function samplesToCSV(samples) {
  * @returns {string}
  */
 function samplesToJSON(samples) {
-  return JSON.stringify({ samples: samples || getSamples() }, null, 2);
+  return JSON.stringify({ samples: (samples || getSamples()).map(_toPublicSample) }, null, 2);
 }
 
 /**
@@ -285,6 +288,16 @@ function _saveLocal(sample) {
   } catch (err) {
     console.warn('localStorage write failed:', err);
   }
+
+  function _removeLocalById(id) {
+    const existing = _loadLocal();
+    const filtered = existing.filter(s => s.id !== id);
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(filtered));
+    } catch (err) {
+      console.warn('localStorage write failed:', err);
+    }
+  }
 }
 
 /**
@@ -311,6 +324,27 @@ function _csvEsc(str) {
   const s = String(str);
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return '"' + s.replace(/"/g, '""') + '"';
+  }
+
+  function _toPublicSample(sample) {
+    const out = { ...(sample || {}) };
+    const isPublicContributor = _asBool(out.allow_public_acknowledgement);
+    if (!isPublicContributor) {
+      out.collector = '';
+      out.institution = '';
+    }
+    delete out.contributor_email;
+    return out;
+  }
+
+  function _asBool(value) {
+    if (value === true || value === false) return value;
+    if (typeof value === 'string') {
+      const v = value.trim().toLowerCase();
+      return v === 'true' || v === '1' || v === 'yes';
+    }
+    if (typeof value === 'number') return value === 1;
+    return false;
   }
   return s;
 }
