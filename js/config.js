@@ -15,6 +15,10 @@ const CONFIG = {
   // -------------------------------------------------------------------------
   API_URL: null,
 
+  // Optional shared submit token for protected backends.
+  // Must match SUBMIT_TOKEN in apps-script/Code.gs when enabled.
+  API_TOKEN: null,
+
   // -------------------------------------------------------------------------
   // Path (or URL) to the JSON file containing pre-loaded sample data.
   // On GitHub Pages this resolves to data/samples.json in the same repo.

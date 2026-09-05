@@ -12,7 +12,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 | **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs); choose full-phi or half-phi size bins; enter grain counts. |
 | **Live CDF preview** | Cumulative distribution (% finer than vs. grain size in mm, log scale) drawn in real time as you enter counts. |
 | **Download data** | Download the full database as CSV or JSON. Every dataset download also includes a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago), including area-selected downloads from drawn rectangles. |
-| **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets (which can sync to OneDrive). |
+| **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets. |
 
 ---
 
@@ -73,19 +73,21 @@ To enable crowd-sourced data collection with persistent storage:
 1. Open [Google Apps Script](https://script.google.com) → **New project**.
 2. Replace the default code with the contents of `apps-script/Code.gs`.
 3. Set `SHEET_ID` at the top of the script to your spreadsheet's ID.
-4. Click **Deploy → New Deployment**:
+4. Set `SUBMIT_TOKEN` in `Code.gs` to a strong secret string.
+5. Click **Deploy → New Deployment**:
    - Type: **Web App**
    - Execute as: **Me**
    - Who has access: **Anyone**
-5. Click **Deploy** and **copy the Web App URL**.
+6. Click **Deploy** and **copy the Web App URL**.
 
 ### 3 – Configure the frontend
 
-Open `js/config.js` and set `API_URL` to your Web App URL:
+Open `js/config.js` and set `API_URL` plus the same `API_TOKEN`:
 
 ```js
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
+  API_TOKEN: 'same-secret-as-submit-token',
   // ...
 };
 ```

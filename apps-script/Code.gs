@@ -18,12 +18,13 @@
  * ENDPOINTS
  * ─────────
  * GET  ?action=getData            → returns all samples as JSON
- * POST body (text/plain JSON)     → { action: 'submit', data: <sample> }
+ * POST body (text/plain JSON)     → { action: 'submit', token: '...', data: <sample> }
  */
 
 // ── Configuration ──────────────────────────────────────────────────────────
 const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
 const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
+const SUBMIT_TOKEN = 'CHANGE_ME_TO_A_STRONG_SECRET';
 
 // Decimal places used when writing Dx percentile statistics to the sheet.
 // Must match CONFIG.DX_PRECISION in js/config.js.
@@ -71,10 +72,17 @@ function doPost(e) {
     if (payload.action !== 'submit') {
       return _corsResponse({ status: 'error', message: 'Unknown action' });
     }
+    if (!_isValidSubmitToken(payload.token)) {
+      return _corsResponse({ status: 'error', message: 'Unauthorized submit request' });
+    }
 
     const sample = payload.data;
     if (!sample || !sample.id) {
       return _corsResponse({ status: 'error', message: 'Invalid sample data' });
+    }
+
+    function _isValidSubmitToken(token) {
+      return !!SUBMIT_TOKEN && token === SUBMIT_TOKEN;
     }
 
     _appendSample(sample);

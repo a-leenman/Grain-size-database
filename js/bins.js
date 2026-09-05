@@ -156,15 +156,11 @@ function computeCDF(sample) {
     cumulative += (counts[b.key] || 0);
     const pct = (cumulative / total) * 100;
 
-    // Use upper boundary for plotting; skip Infinity for the coarsest bin
-    // (CDF reaches 100 % at the last finite boundary instead).
+    // Use only finite upper boundaries so Dx interpolation matches
+    // apps-script/Code.gs statistics (coarsest open-ended bin is excluded).
     if (isFinite(b.upperMm)) {
       mmValues.push(b.upperMm);
       pctFiner.push(parseFloat(pct.toFixed(2)));
-    } else {
-      // Still record 100 % at a representative "coarse" position
-      mmValues.push(b.lowerMm * 2);
-      pctFiner.push(100);
     }
   });
 

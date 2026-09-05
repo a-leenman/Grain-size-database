@@ -103,7 +103,11 @@ async function saveSample(sample) {
         method:  'POST',
         // Google Apps Script requires text/plain to avoid a preflight CORS request
         headers: { 'Content-Type': 'text/plain' },
-        body:    JSON.stringify({ action: 'submit', data: sample }),
+        body:    JSON.stringify({
+          action: 'submit',
+          token: CONFIG.API_TOKEN || null,
+          data: sample,
+        }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
