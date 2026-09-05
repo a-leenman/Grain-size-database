@@ -175,10 +175,10 @@ One row per sample. Columns: all metadata fields plus computed statistics
 Complete raw data including the full `counts` object for every sample.
 
 ### Bibliography export
-When downloading any dataset (all CSV, all JSON, or selected-area CSV), the app
-also exports a bibliography compiled from unique `paper_doi` values in the
-downloaded samples. Users can choose **BibTeX**, **Harvard**, or **Chicago**
-style before downloading.
+When downloading any dataset (all CSV, all JSON, selected-area CSV, or
+selected-area JSON), the app also exports a bibliography compiled from unique
+`paper_doi` values in the downloaded samples. Users can choose **BibTeX**,
+**Harvard**, or **Chicago** style before downloading.
 
 ---
 

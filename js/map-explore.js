@@ -331,6 +331,16 @@ async function downloadAreaData() {
   await _downloadBibliographyBundle(selectedSamples, 'grain-size-samples-area-references');
 }
 
+async function downloadAreaJSON() {
+  if (!selectedSamples) return;
+  downloadFile(
+    samplesToJSON(selectedSamples),
+    'grain-size-samples-area.json',
+    'application/json',
+  );
+  await _downloadBibliographyBundle(selectedSamples, 'grain-size-samples-area-references');
+}
+
 function _selectedBibliographyStyle() {
   return document.getElementById('bibliography-style')?.value || 'harvard';
 }
