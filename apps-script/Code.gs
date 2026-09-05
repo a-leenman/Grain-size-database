@@ -111,6 +111,8 @@ function _appendSample(sample) {
   // Compute simple statistics from counts (replicating js/bins.js logic)
   const stats = _computeStats(sample);
 
+  const lat = (sample.location && sample.location.lat);
+  const lng = (sample.location && sample.location.lng);
   const row = [
     sample.id,
     sample.timestamp || new Date().toISOString(),
@@ -119,8 +121,8 @@ function _appendSample(sample) {
     sample.institution || '',
     sample.river_name || '',
     sample.paper_doi || '',
-    (sample.location && sample.location.lat)  || '',
-    (sample.location && sample.location.lng)  || '',
+    Number.isFinite(lat) ? lat : '',
+    Number.isFinite(lng) ? lng : '',
     (sample.location && sample.location.description) || '',
     sample.landform || '',
     sample.surface_condition || '',
@@ -144,6 +146,11 @@ function _getAllSamples() {
 
   const data = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
 
+  const parseCoord = (value) => {
+    const num = parseFloat(value);
+    return Number.isFinite(num) ? num : null;
+  };
+
   return data.map(row => {
     const obj = {};
     HEADERS.forEach((h, i) => { obj[h] = row[i]; });
@@ -161,8 +168,8 @@ function _getAllSamples() {
       river_name:        obj.river_name,
       paper_doi:         obj.paper_doi || '',
       location: {
-        lat:         parseFloat(obj.lat)  || null,
-        lng:         parseFloat(obj.lng)  || null,
+        lat:         parseCoord(obj.lat),
+        lng:         parseCoord(obj.lng),
         description: obj.location_description || '',
       },
       landform:          obj.landform,

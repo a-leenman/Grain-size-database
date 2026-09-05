@@ -90,7 +90,11 @@ async function saveSample(sample) {
 
   // Always persist locally.
   _saveLocal(sample);
-  if (_cache) _cache.push(sample);
+  if (_cache) {
+    const idx = _cache.findIndex(s => s.id === sample.id);
+    if (idx >= 0) _cache[idx] = sample;
+    else _cache.push(sample);
+  }
 
   // If an API is configured, also send to the backend.
   if (CONFIG.API_URL) {
@@ -149,6 +153,7 @@ function samplesToCSV(samples) {
     const d50     = getDx(cdf, 50)  ?? '';
     const d84     = getDx(cdf, 84)  ?? '';
     const photos  = (s.photo_urls || []).join('; ');
+    const paperDoi = (s.paper_doi || '').trim();
 
     return [
       s.id,
@@ -157,7 +162,7 @@ function samplesToCSV(samples) {
       _csvEsc(s.collector),
       _csvEsc(s.institution),
       _csvEsc(s.river_name),
-      _csvEsc(normalizeSampleDOI(s.paper_doi) || ''),
+      _csvEsc(paperDoi),
       s.location?.lat ?? '',
       s.location?.lng ?? '',
       _csvEsc(s.location?.description ?? ''),

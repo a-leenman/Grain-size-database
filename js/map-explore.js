@@ -189,7 +189,7 @@ function _buildPopupContent(sample) {
 
   const photosHtml = (sample.photo_urls || [])
     .filter(Boolean)
-    .map(u => `<a href="${_esc(u)}" target="_blank" class="me-1">📷 Photo</a>`)
+    .map(u => `<a href="${_esc(u)}" target="_blank" rel="noopener noreferrer" class="me-1">📷 Photo</a>`)
     .join('');
 
   return `
@@ -205,7 +205,7 @@ function _buildPopupContent(sample) {
             <td colspan="${inst ? '3' : '5'}">${collector}</td>
             ${inst ? `<td><b>Institution</b></td><td colspan="1">${inst}</td>` : ''}
           </tr>
-          ${doi ? `<tr><td><b>DOI</b></td><td colspan="5"><a href="${doiHref}" target="_blank">${doi}</a></td></tr>` : ''}
+          ${doi ? `<tr><td><b>DOI</b></td><td colspan="5"><a href="${doiHref}" target="_blank" rel="noopener noreferrer">${doi}</a></td></tr>` : ''}
           <tr>
             <td><b>Landform</b></td><td colspan="2">${landform}</td>
             <td><b>Surface</b></td><td colspan="2">${condition}</td>

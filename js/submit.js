@@ -24,6 +24,7 @@ let previewChartCanvas; // <canvas> for the live CDF preview
 // ---------------------------------------------------------------------------
 
 document.addEventListener('DOMContentLoaded', () => {
+  _setDateMaxToToday();
   _initSubmitMap();
   _initPhiToggle();
   _initCoordInputs();
@@ -308,12 +309,14 @@ function _showAlert(html, type) {
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Keep the date input's max attribute set to today's date (no future dates).
-(function () {
-  const today = new Date().toISOString().split('T')[0];
+// Keep the date input's max attribute set to today's local date (no future dates).
+function _setDateMaxToToday() {
+  const now = new Date();
+  const tzOffsetMs = now.getTimezoneOffset() * 60 * 1000;
+  const today = new Date(now.getTime() - tzOffsetMs).toISOString().split('T')[0];
   const dateEl = document.getElementById('date_collected');
   if (dateEl) dateEl.setAttribute('max', today);
-}());
+}
 
 /** Make a bin key safe for use in an HTML id attribute. */
 function _idSafe(key) {
