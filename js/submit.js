@@ -38,6 +38,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // ---------------------------------------------------------------------------
 
 function _initSubmitMap() {
+  if (typeof L === 'undefined') {
+    _showAlertText('Map tiles are unavailable right now. You can still submit using the latitude/longitude fields.', 'warning');
+    return;
+  }
+
   submitMap = L.map('submit-map', {
     center:       CONFIG.MAP_CENTER,
     zoom:         CONFIG.MAP_ZOOM,
@@ -61,6 +66,8 @@ function _setLocation(lat, lng) {
   document.getElementById('lat').value = lat;
   document.getElementById('lng').value = lng;
 
+  if (!submitMap || typeof L === 'undefined') return;
+
   if (locationMarker) {
     locationMarker.setLatLng([lat, lng]);
   } else {
@@ -80,7 +87,9 @@ function _initCoordInputs() {
       const lng = parseFloat(document.getElementById('lng').value);
       if (!isNaN(lat) && !isNaN(lng)) {
         _setLocation(lat, lng);
-        submitMap.setView([lat, lng], Math.max(submitMap.getZoom(), CONFIG.COORD_INPUT_MIN_ZOOM));
+        if (submitMap) {
+          submitMap.setView([lat, lng], Math.max(submitMap.getZoom(), CONFIG.COORD_INPUT_MIN_ZOOM));
+        }
       }
     });
   });
@@ -274,7 +283,7 @@ function _initFormValidation() {
       draftSampleId = null;
       form.classList.remove('was-validated');
       _renderBinTable(_getPhiInterval(), _getMinOpeningMm());
-      if (locationMarker) { submitMap.removeLayer(locationMarker); locationMarker = null; }
+      if (locationMarker && submitMap) { submitMap.removeLayer(locationMarker); locationMarker = null; }
       const previewSection = document.getElementById('preview-section');
       if (previewSection) previewSection.classList.add('d-none');
       const previewPlaceholder = document.getElementById('preview-placeholder');
