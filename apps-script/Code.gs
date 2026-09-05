@@ -24,8 +24,6 @@
 // ── Configuration ──────────────────────────────────────────────────────────
 const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
 const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
-const SUBMIT_TOKEN = '';
-
 // Decimal places used when writing Dx percentile statistics to the sheet.
 // Must match CONFIG.DX_PRECISION in js/config.js.
 const DX_PRECISION = 2;
@@ -33,7 +31,7 @@ const DX_PRECISION = 2;
 // ── Column headers written to the sheet ────────────────────────────────────
 const HEADERS = [
   'id', 'timestamp', 'date_collected', 'collector', 'institution',
-  'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
+  'contributor_email', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
   'landform', 'surface_condition', 'phi_interval',
   'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
   'notes', 'photo_urls',
@@ -72,9 +70,6 @@ function doPost(e) {
     if (payload.action !== 'submit') {
       return _corsResponse({ status: 'error', message: 'Unknown action' });
     }
-    if (!_isValidSubmitToken(payload.token)) {
-      return _corsResponse({ status: 'error', message: 'Unauthorized submit request' });
-    }
 
     const sample = payload.data;
     if (!sample || !sample.id) {
@@ -87,11 +82,6 @@ function doPost(e) {
   } catch (err) {
     return _corsResponse({ status: 'error', message: err.message });
   }
-}
-
-function _isValidSubmitToken(token) {
-  if (!SUBMIT_TOKEN) return true;
-  return token === SUBMIT_TOKEN;
 }
 
 // ── Sheet helpers ─────────────────────────────────────────────────────────────
@@ -128,6 +118,7 @@ function _appendSample(sample) {
     sample.date_collected || '',
     sample.collector || '',
     sample.institution || '',
+    (sample.contributor_email || '').toLowerCase(),
     _toBool(sample.allow_public_acknowledgement),
     sample.river_name || '',
     sample.paper_doi || '',
@@ -185,6 +176,7 @@ function _getAllSamples() {
       date_collected:    obj.date_collected,
       collector:         obj.collector,
       institution:       obj.institution,
+      contributor_email: obj.contributor_email || '',
       allow_public_acknowledgement: _toBool(obj.allow_public_acknowledgement),
       river_name:        obj.river_name,
       paper_doi:         obj.paper_doi || '',

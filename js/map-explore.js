@@ -375,14 +375,14 @@ function _safeExternalUrl(value) {
   } catch {
     return null;
   }
+}
 
-  function _asBool(value) {
-    if (value === true || value === false) return value;
-    if (typeof value === 'string') {
-      const v = value.trim().toLowerCase();
-      return v === 'true' || v === '1' || v === 'yes';
-    }
-    if (typeof value === 'number') return value === 1;
-    return false;
+function _asBool(value) {
+  if (value === true || value === false) return value;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    return v === 'true' || v === '1' || v === 'yes';
   }
+  if (typeof value === 'number') return value === 1;
+  return false;
 }

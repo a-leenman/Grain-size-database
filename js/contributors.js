@@ -34,22 +34,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function _collectContributors(samples) {
-  const seen = new Set();
   const outByKey = new Map();
 
   (samples || []).forEach(sample => {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
-    const names = _splitContributorNames(sample?.collector);
-    if (!names.length) return;
+    const email = _normalizeEmail(sample?.contributor_email);
+    const name = String(sample?.collector || '').trim();
+    if (!email || !name) return;
     const institution = String(sample?.institution || '').trim();
-    names.forEach(name => {
-      const key = `${name.toLowerCase()}|${institution.toLowerCase()}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        outByKey.set(key, { name, institution, sampleCount: 0 });
-      }
-      outByKey.get(key).sampleCount += 1;
-    });
+    if (!outByKey.has(email)) {
+      outByKey.set(email, { name, institution, sampleCount: 0 });
+    }
+    const item = outByKey.get(email);
+    item.sampleCount += 1;
+    if (!item.institution && institution) item.institution = institution;
+    if (item.name !== name && name) item.name = name;
   });
 
   return Array.from(outByKey.values()).sort((a, b) => {
@@ -58,11 +57,10 @@ function _collectContributors(samples) {
   });
 }
 
-function _splitContributorNames(rawCollector) {
-  return String(rawCollector || '')
-    .split(/[;,]/)
-    .map(name => name.trim())
-    .filter(Boolean);
+function _normalizeEmail(value) {
+  const email = String(value || '').trim().toLowerCase();
+  if (!email) return '';
+  return email;
 }
 
 function _asBool(value) {

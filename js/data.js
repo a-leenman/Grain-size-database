@@ -143,7 +143,7 @@ function samplesToCSV(samples) {
 
   const headers = [
     'id', 'timestamp', 'date_collected', 'collector', 'institution',
-    'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
+    'contributor_email', 'allow_public_acknowledgement', 'river_name', 'paper_doi', 'lat', 'lng', 'location_description',
     'landform', 'surface_condition', 'phi_interval',
     'total_count', 'D10_mm', 'D50_mm', 'D84_mm',
     'notes', 'photo_urls',
@@ -164,6 +164,7 @@ function samplesToCSV(samples) {
       s.date_collected,
       _csvEsc(s.collector),
       _csvEsc(s.institution),
+      _csvEsc((s.contributor_email || '').trim()),
       s.allow_public_acknowledgement ? 'true' : 'false',
       _csvEsc(s.river_name),
       _csvEsc(paperDoi),
