@@ -18,6 +18,7 @@
 let submitMap;          // Leaflet map instance on submit page
 let locationMarker;     // Draggable marker for the selected location
 let previewChartCanvas; // <canvas> for the live CDF preview
+let draftSampleId = null; // Reused between retries to avoid duplicate submissions
 
 // ---------------------------------------------------------------------------
 // Initialisation
@@ -192,6 +193,7 @@ function _initFormValidation() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    _hideExportButton();
     if (!form.checkValidity()) {
       form.classList.add('was-validated');
       return;
@@ -218,6 +220,7 @@ function _initFormValidation() {
     submitBtn.textContent = 'Submitting…';
 
     const result = await saveSample(sample);
+    draftSampleId = sample.id || draftSampleId;
 
     submitBtn.disabled = false;
     submitBtn.textContent = 'Submit Sample';
@@ -225,6 +228,7 @@ function _initFormValidation() {
     if (result.ok) {
       _showAlert(result.message + ' <a href="index.html">View on map →</a>', 'success');
       form.reset();
+      draftSampleId = null;
       form.classList.remove('was-validated');
       _renderBinTable(_getPhiInterval());
       if (locationMarker) { submitMap.removeLayer(locationMarker); locationMarker = null; }
@@ -233,6 +237,7 @@ function _initFormValidation() {
       const previewPlaceholder = document.getElementById('preview-placeholder');
       if (previewPlaceholder) previewPlaceholder.classList.remove('d-none');
       if (previewChartCanvas) { destroyChart(previewChartCanvas); previewChartCanvas = null; }
+      _hideExportButton();
     } else {
       _showAlert(result.message, 'warning');
 
@@ -279,6 +284,7 @@ function _buildSampleFromForm() {
   const lng = Number.isFinite(lngRaw) ? lngRaw : null;
 
   return {
+    id:               draftSampleId || undefined,
     collector:        document.getElementById('collector')?.value.trim()        || '',
     institution:      document.getElementById('institution')?.value.trim()      || '',
     paper_doi:        document.getElementById('paper_doi')?.value.trim()        || '',
@@ -311,6 +317,13 @@ function _showAlert(html, type) {
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>`;
   container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function _hideExportButton() {
+  const exportBtn = document.getElementById('export-btn');
+  if (!exportBtn) return;
+  exportBtn.classList.add('d-none');
+  exportBtn.onclick = null;
 }
 
 // Keep the date input's max attribute set to today's local date (no future dates).

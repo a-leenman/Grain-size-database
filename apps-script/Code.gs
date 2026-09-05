@@ -136,7 +136,17 @@ function _appendSample(sample) {
     JSON.stringify(sample.counts || {}),
   ];
 
-  sheet.appendRow(row);
+  const dataRows = Math.max(0, sheet.getLastRow() - 1);
+  const idValues = dataRows > 0
+    ? sheet.getRange(2, 1, dataRows, 1).getValues()
+    : [];
+  const existingIndex = idValues.findIndex(r => String(r[0]) === String(sample.id));
+  if (existingIndex >= 0) {
+    const rowNumber = existingIndex + 2; // account for header row
+    sheet.getRange(rowNumber, 1, 1, HEADERS.length).setValues([row]);
+  } else {
+    sheet.appendRow(row);
+  }
 }
 
 function _getAllSamples() {
