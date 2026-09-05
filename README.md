@@ -11,7 +11,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 | **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. |
 | **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs); choose full-phi or half-phi size bins; enter grain counts. |
 | **Live CDF preview** | Cumulative distribution (% finer than vs. grain size in mm, log scale) drawn in real time as you enter counts. |
-| **Download data** | Download the full database as CSV or JSON. Draw a rectangle on the map to download only samples within an area, plus a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago). |
+| **Download data** | Download the full database as CSV or JSON. Every dataset download also includes a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago), including area-selected downloads from drawn rectangles. |
 | **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets (which can sync to OneDrive). |
 
 ---
@@ -174,10 +174,11 @@ One row per sample. Columns: all metadata fields plus computed statistics
 ### JSON
 Complete raw data including the full `counts` object for every sample.
 
-### Area bibliography export
-When downloading a selected map rectangle, the app also exports a bibliography
-compiled from unique `paper_doi` values in the selected samples. Users can
-choose **BibTeX**, **Harvard**, or **Chicago** style before downloading.
+### Bibliography export
+When downloading any dataset (all CSV, all JSON, or selected-area CSV), the app
+also exports a bibliography compiled from unique `paper_doi` values in the
+downloaded samples. Users can choose **BibTeX**, **Harvard**, or **Chicago**
+style before downloading.
 
 ---
 

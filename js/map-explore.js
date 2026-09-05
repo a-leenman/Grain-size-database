@@ -311,12 +311,14 @@ function _computeAreaSelection(bounds) {
 // Download handlers (called from inline onclick attributes in index.html)
 // ---------------------------------------------------------------------------
 
-function downloadAllData() {
+async function downloadAllData() {
   downloadFile(samplesToCSV(), 'grain-size-samples.csv', 'text/csv;charset=utf-8;');
+  await _downloadBibliographyBundle(getSamples(), 'grain-size-samples-references');
 }
 
-function downloadAllJSON() {
+async function downloadAllJSON() {
   downloadFile(samplesToJSON(), 'grain-size-samples.json', 'application/json');
+  await _downloadBibliographyBundle(getSamples(), 'grain-size-samples-references');
 }
 
 async function downloadAreaData() {
@@ -326,13 +328,17 @@ async function downloadAreaData() {
     'grain-size-samples-area.csv',
     'text/csv;charset=utf-8;',
   );
-  const style = document.getElementById('bibliography-style')?.value || 'harvard';
+  await _downloadBibliographyBundle(selectedSamples, 'grain-size-samples-area-references');
+}
+
+function _selectedBibliographyStyle() {
+  return document.getElementById('bibliography-style')?.value || 'harvard';
+}
+
+async function _downloadBibliographyBundle(samples, baseName) {
+  const style = _selectedBibliographyStyle();
   const ext = style === 'bibtex' ? 'bib' : 'txt';
-  await downloadBibliographyForSamples(
-    selectedSamples,
-    `grain-size-samples-area-references.${ext}`,
-    style,
-  );
+  await downloadBibliographyForSamples(samples, `${baseName}.${ext}`, style);
 }
 
 // ---------------------------------------------------------------------------
