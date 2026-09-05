@@ -33,6 +33,9 @@ async function loadSamples() {
       const res = await fetch(url);
       if (res.ok) {
         const json = await res.json();
+        if (!Array.isArray(json) && json?.status && json.status !== 'ok') {
+          throw new Error(json.message || 'API returned error status');
+        }
         const remote = Array.isArray(json) ? json : (json.samples || []);
         _cache = remote.map(_toPublicSample);
         return _cache;
@@ -95,28 +98,28 @@ async function updateSampleQC(sampleId, qcChecked, adminToken, checkedBy = 'Admi
           qc_checked_by: checkedBy || 'Admin',
         };
       }
-
-      async function validateAdminToken(adminToken) {
-        if (!CONFIG.API_URL) return { ok: false, message: 'No API backend configured.' };
-        try {
-          const res = await fetch(CONFIG.API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({
-              action: 'authQC',
-              token: adminToken || '',
-            }),
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const json = await res.json();
-          if (json.status !== 'ok') throw new Error(json.message || 'Unauthorized');
-          return { ok: true };
-        } catch (err) {
-          return { ok: false, message: err.message };
-        }
-      }
     }
     return { ok: true, message: 'QC flag updated.' };
+  } catch (err) {
+    return { ok: false, message: err.message };
+  }
+}
+
+async function validateAdminToken(adminToken) {
+  if (!CONFIG.API_URL) return { ok: false, message: 'No API backend configured.' };
+  try {
+    const res = await fetch(CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'authQC',
+        token: adminToken || '',
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.status !== 'ok') throw new Error(json.message || 'Unauthorized');
+    return { ok: true };
   } catch (err) {
     return { ok: false, message: err.message };
   }

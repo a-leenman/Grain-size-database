@@ -110,9 +110,10 @@ function _isValidSample(sample) {
   if (!Number.isFinite(lng) || lng < -180 || lng > 180) return false;
   const email = _normalizeEmail(sample.contributor_email);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+  if (sample.phi_interval !== 'full' && sample.phi_interval !== 'half') return false;
   if (!sample.counts || typeof sample.counts !== 'object') return false;
   const minOpening = Number(sample.min_opening_mm);
-  if (!Number.isFinite(minOpening) || minOpening <= 0) return false;
+  if (!Number.isFinite(minOpening) || ![0.5, 2, 4, 8].includes(minOpening)) return false;
   const total = Object.keys(sample.counts).reduce((sum, k) => sum + (parseInt(sample.counts[k], 10) || 0), 0);
   return total > 0;
 }

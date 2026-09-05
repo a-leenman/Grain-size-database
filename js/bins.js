@@ -63,17 +63,22 @@ function generateBins(halfPhi, minOpeningMm = 0.5) {
   const bins = [];
   const minMm = Number.isFinite(minOpeningMm) && minOpeningMm > 0 ? minOpeningMm : 0.5;
 
-  // Build phi boundary array from selected minimum opening down to -8 φ (= 256 mm),
-  // stepping by `interval`.
-  const phiBoundaries = [];
+  // Build canonical phi boundary array from +1 φ to -8 φ on selected interval.
+  const allPhiBoundaries = [];
   const eps = 1e-9; // floating-point guard
-  const startPhi = -Math.log2(minMm);
-  for (let phi = startPhi; phi >= -8.0 - eps; phi -= interval) {
-    phiBoundaries.push(parseFloat(phi.toFixed(4)));
+  for (let phi = 1.0; phi >= -8.0 - eps; phi -= interval) {
+    allPhiBoundaries.push(parseFloat(phi.toFixed(4)));
   }
+
+  // Snap start to the canonical boundary matching selected minimum opening.
+  const allMmBoundaries = allPhiBoundaries.map(p => Math.pow(2, -p));
+  const startIdx = allMmBoundaries.findIndex(mm => Math.abs(mm - minMm) < 1e-6);
+  const begin = startIdx >= 0 ? startIdx : 0;
+  const phiBoundaries = allPhiBoundaries.slice(begin);
   if (!phiBoundaries.length || phiBoundaries[phiBoundaries.length - 1] > -8.0 + eps) {
     phiBoundaries.push(-8.0);
   }
+
   // Convert to mm (D = 2^(−phi)).
   const mmBoundaries = phiBoundaries.map(p => Math.pow(2, -p));
 
