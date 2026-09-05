@@ -5,7 +5,7 @@
  * web-app URL (see apps-script/Code.gs for the backend code).
  *
  * Without an API_URL the site operates in "demo mode": submitted samples are
- * kept only in localStorage for the current browser session.
+ * stored in browser localStorage and merged into the displayed dataset locally.
  */
 const CONFIG = {
   // -------------------------------------------------------------------------

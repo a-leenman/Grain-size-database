@@ -241,7 +241,11 @@ function _initFormValidation() {
       if (exportBtn) {
         exportBtn.classList.remove('d-none');
         exportBtn.onclick = () => {
-          downloadFile(JSON.stringify(sample, null, 2), `sample-${sample.id}.json`, 'application/json');
+          downloadFile(
+            JSON.stringify({ samples: [sample] }, null, 2),
+            `sample-${sample.id}.json`,
+            'application/json',
+          );
         };
       }
     }

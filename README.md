@@ -56,9 +56,9 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 
 ## Setting up data persistence (Google Apps Script)
 
-By default the site is "read-only": the map displays whatever is in
-`data/samples.json`, and any sample you submit is saved only in your
-browser's `localStorage`.
+By default the site is in demo mode: the map loads `data/samples.json`, and
+new submissions are saved in the browser's `localStorage` and merged into the
+displayed dataset for that browser.
 
 To enable crowd-sourced data collection with persistent storage:
 
