@@ -181,6 +181,9 @@ One row per sample. Columns: all metadata fields plus computed statistics
 ### JSON
 Complete raw data including the full `counts` object for every sample.
 
+Contributor emails are used to derive an internal contributor ID for counting,
+but contributor emails are not included in public data exports.
+
 ### Bibliography export
 When downloading any dataset (all CSV, all JSON, selected-area CSV, or
 selected-area JSON), the app also exports a bibliography compiled from unique

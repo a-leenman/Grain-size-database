@@ -288,15 +288,15 @@ function _saveLocal(sample) {
   } catch (err) {
     console.warn('localStorage write failed:', err);
   }
+}
 
-  function _removeLocalById(id) {
-    const existing = _loadLocal();
-    const filtered = existing.filter(s => s.id !== id);
-    try {
-      localStorage.setItem(LS_KEY, JSON.stringify(filtered));
-    } catch (err) {
-      console.warn('localStorage write failed:', err);
-    }
+function _removeLocalById(id) {
+  const existing = _loadLocal();
+  const filtered = existing.filter(s => s.id !== id);
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(filtered));
+  } catch (err) {
+    console.warn('localStorage write failed:', err);
   }
 }
 
@@ -325,28 +325,28 @@ function _csvEsc(str) {
   if (s.includes(',') || s.includes('"') || s.includes('\n')) {
     return '"' + s.replace(/"/g, '""') + '"';
   }
-
-  function _toPublicSample(sample) {
-    const out = { ...(sample || {}) };
-    const isPublicContributor = _asBool(out.allow_public_acknowledgement);
-    if (!isPublicContributor) {
-      out.collector = '';
-      out.institution = '';
-    }
-    delete out.contributor_email;
-    return out;
-  }
-
-  function _asBool(value) {
-    if (value === true || value === false) return value;
-    if (typeof value === 'string') {
-      const v = value.trim().toLowerCase();
-      return v === 'true' || v === '1' || v === 'yes';
-    }
-    if (typeof value === 'number') return value === 1;
-    return false;
-  }
   return s;
+}
+
+function _toPublicSample(sample) {
+  const out = { ...(sample || {}) };
+  const isPublicContributor = _asBool(out.allow_public_acknowledgement);
+  if (!isPublicContributor) {
+    out.collector = '';
+    out.institution = '';
+  }
+  delete out.contributor_email;
+  return out;
+}
+
+function _asBool(value) {
+  if (value === true || value === false) return value;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    return v === 'true' || v === '1' || v === 'yes';
+  }
+  if (typeof value === 'number') return value === 1;
+  return false;
 }
 
 async function _buildCitation(doi, style) {

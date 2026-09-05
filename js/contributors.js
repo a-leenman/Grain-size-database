@@ -38,10 +38,11 @@ function _collectContributors(samples) {
 
   (samples || []).forEach(sample => {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
-    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase();
     const name = String(sample?.collector || '').trim();
-    if (!contributorId || !name) return;
     const institution = String(sample?.institution || '').trim();
+    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase()
+      || `${name.toLowerCase()}|${institution.toLowerCase()}`;
+    if (!name || !contributorId) return;
     if (!outByKey.has(contributorId)) {
       outByKey.set(contributorId, { name, institution, sampleCount: 0 });
     }
