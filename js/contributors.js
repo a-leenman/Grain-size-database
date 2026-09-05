@@ -15,10 +15,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     statusEl.textContent = `${contributors.length} contributor${contributors.length === 1 ? '' : 's'}`;
-    contributors.forEach(({ name, institution }) => {
+    contributors.forEach(({ name, institution, sampleCount }) => {
       const li = document.createElement('li');
       li.className = 'list-group-item px-0';
-      li.innerHTML = `<strong>${_esc(name)}</strong><div class="text-muted small">${_esc(institution || 'Institution not provided')}</div>`;
+      li.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start gap-2">
+          <div>
+            <strong>${_esc(name)}</strong>
+            <div class="text-muted small">${_esc(institution || 'Institution not provided')}</div>
+          </div>
+          <span class="badge text-bg-primary rounded-pill">${sampleCount}</span>
+        </div>`;
       listEl.appendChild(li);
     });
   } catch {
@@ -28,20 +35,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function _collectContributors(samples) {
   const seen = new Set();
-  const out = [];
+  const outByKey = new Map();
 
   (samples || []).forEach(sample => {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
-    const name = String(sample?.collector || '').trim();
-    if (!name) return;
+    const names = _splitContributorNames(sample?.collector);
+    if (!names.length) return;
     const institution = String(sample?.institution || '').trim();
-    const key = `${name.toLowerCase()}|${institution.toLowerCase()}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    out.push({ name, institution });
+    names.forEach(name => {
+      const key = `${name.toLowerCase()}|${institution.toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        outByKey.set(key, { name, institution, sampleCount: 0 });
+      }
+      outByKey.get(key).sampleCount += 1;
+    });
   });
 
-  return out.sort((a, b) => a.name.localeCompare(b.name));
+  return Array.from(outByKey.values()).sort((a, b) => {
+    if (b.sampleCount !== a.sampleCount) return b.sampleCount - a.sampleCount;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function _splitContributorNames(rawCollector) {
+  return String(rawCollector || '')
+    .split(/[;,]/)
+    .map(name => name.trim())
+    .filter(Boolean);
 }
 
 function _asBool(value) {

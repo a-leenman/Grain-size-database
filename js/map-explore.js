@@ -177,8 +177,9 @@ function _buildPopupContent(sample) {
   const condition = _esc(conditionMap[sample.surface_condition] || sample.surface_condition || '–');
   const date      = _esc(sample.date_collected || '–');
   const river     = _esc(sample.river_name || '–');
-  const collector = _esc(sample.collector  || '–');
-  const inst      = _esc(sample.institution || '');
+  const showContributor = _asBool(sample.allow_public_acknowledgement);
+  const collector = _esc(showContributor ? (sample.collector || '–') : 'Withheld');
+  const inst      = _esc(showContributor ? (sample.institution || '') : '');
   const rawDoi    = normalizeSampleDOI(sample.paper_doi);
   const doi       = _esc(rawDoi);
   const doiHref   = rawDoi ? _esc(`https://doi.org/${rawDoi}`) : '';
@@ -373,5 +374,15 @@ function _safeExternalUrl(value) {
     return parsed.toString();
   } catch {
     return null;
+  }
+
+  function _asBool(value) {
+    if (value === true || value === false) return value;
+    if (typeof value === 'string') {
+      const v = value.trim().toLowerCase();
+      return v === 'true' || v === '1' || v === 'yes';
+    }
+    if (typeof value === 'number') return value === 1;
+    return false;
   }
 }

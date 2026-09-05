@@ -105,7 +105,6 @@ async function saveSample(sample) {
         headers: { 'Content-Type': 'text/plain' },
         body:    JSON.stringify({
           action: 'submit',
-          token: CONFIG.API_TOKEN || null,
           data: sample,
         }),
       });
@@ -243,10 +242,7 @@ async function downloadBibliographyForSamples(samples, filename = 'grain-size-re
   const dois = getUniqueSampleDois(samples);
   if (!dois.length) return { ok: false, reason: 'no-doi' };
 
-  const citations = [];
-  for (const doi of dois) {
-    citations.push(await _buildCitation(doi, style));
-  }
+  const citations = await Promise.all(dois.map(doi => _buildCitation(doi, style)));
 
   const contentType = style === 'bibtex' ? 'application/x-bibtex;charset=utf-8;' : 'text/plain;charset=utf-8;';
   const styleLabel = style === 'bibtex' ? 'BibTeX' : (style === 'chicago' ? 'Chicago' : 'Harvard');

@@ -18,13 +18,13 @@
  * ENDPOINTS
  * ─────────
  * GET  ?action=getData            → returns all samples as JSON
- * POST body (text/plain JSON)     → { action: 'submit', token: '...', data: <sample> }
+ * POST body (text/plain JSON)     → { action: 'submit', data: <sample> }
  */
 
 // ── Configuration ──────────────────────────────────────────────────────────
 const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
 const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
-const SUBMIT_TOKEN = 'CHANGE_ME_TO_A_STRONG_SECRET';
+const SUBMIT_TOKEN = '';
 
 // Decimal places used when writing Dx percentile statistics to the sheet.
 // Must match CONFIG.DX_PRECISION in js/config.js.
@@ -90,7 +90,8 @@ function doPost(e) {
 }
 
 function _isValidSubmitToken(token) {
-  return !!SUBMIT_TOKEN && token === SUBMIT_TOKEN;
+  if (!SUBMIT_TOKEN) return true;
+  return token === SUBMIT_TOKEN;
 }
 
 // ── Sheet helpers ─────────────────────────────────────────────────────────────
@@ -256,15 +257,6 @@ function _generateBoundaries(interval) {
     phiList.push(parseFloat(phi.toFixed(4)));
   }
 
-  function _toBool(value) {
-    if (value === true || value === false) return value;
-    if (typeof value === 'string') {
-      const v = value.trim().toLowerCase();
-      return v === 'true' || v === '1' || v === 'yes';
-    }
-    if (typeof value === 'number') return value === 1;
-    return false;
-  }
   const mmList = phiList.map(p => Math.pow(2, -p));
 
   // Finest bin
@@ -281,4 +273,14 @@ function _generateBoundaries(interval) {
   boundaries.push({ key: 'coarsest', upperMm: Infinity });
 
   return boundaries;
+}
+
+function _toBool(value) {
+  if (value === true || value === false) return value;
+  if (typeof value === 'string') {
+    const v = value.trim().toLowerCase();
+    return v === 'true' || v === '1' || v === 'yes';
+  }
+  if (typeof value === 'number') return value === 1;
+  return false;
 }

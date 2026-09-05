@@ -10,7 +10,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 |---|---|
 | **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. |
 | **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs), and choose whether your name+institution can be publicly acknowledged; choose full-phi or half-phi size bins; enter grain counts. |
-| **Contributors page** | Lists contributor names and institutions only for submissions where contributors opted in to public acknowledgement. |
+| **Contributors page** | Lists contributor names, institutions, and total contributed sample counts only for submissions where contributors opted in to public acknowledgement. |
 | **Live CDF preview** | Cumulative distribution (% finer than vs. grain size in mm, log scale) drawn in real time as you enter counts. |
 | **Download data** | Download the full database as CSV or JSON. Every dataset download also includes a bibliography file for DOI-linked studies (BibTeX / Harvard / Chicago), including area-selected downloads from drawn rectangles. |
 | **Configurable backend** | Works out-of-the-box with a static `data/samples.json` file. Optionally connect a Google Apps Script backend to save submissions to Google Sheets. |
@@ -77,7 +77,7 @@ To enable crowd-sourced data collection with persistent storage:
 1. Open [Google Apps Script](https://script.google.com) → **New project**.
 2. Replace the default code with the contents of `apps-script/Code.gs`.
 3. Set `SHEET_ID` at the top of the script to your spreadsheet's ID.
-4. Set `SUBMIT_TOKEN` in `Code.gs` to a strong secret string.
+4. (Optional) Set `SUBMIT_TOKEN` in `Code.gs` to require a token for writes.
 5. Click **Deploy → New Deployment**:
    - Type: **Web App**
    - Execute as: **Me**
@@ -86,12 +86,11 @@ To enable crowd-sourced data collection with persistent storage:
 
 ### 3 – Configure the frontend
 
-Open `js/config.js` and set `API_URL` plus the same `API_TOKEN`:
+Open `js/config.js` and set `API_URL` to your Web App URL:
 
 ```js
 const CONFIG = {
   API_URL: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec',
-  API_TOKEN: 'same-secret-as-submit-token',
   // ...
 };
 ```
