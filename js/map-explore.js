@@ -128,13 +128,21 @@ function _renderMarkers(samples) {
 
     // Initialise the mini CDF chart once the popup DOM is ready.
     marker.on('popupopen', (e) => {
-      const canvas = e.popup.getElement().querySelector('canvas.mini-cdf');
+      const popupEl = e.popup.getElement();
+      const canvas = popupEl.querySelector('canvas.mini-cdf');
       if (canvas) {
         if (activePopupCanvas && activePopupCanvas !== canvas) {
           destroyChart(activePopupCanvas);
         }
         renderCDF(canvas, sample, { mini: true });
         activePopupCanvas = canvas;
+      }
+      const qcBtn = popupEl.querySelector('.qc-toggle-btn');
+      if (qcBtn && sample.id) {
+        qcBtn.addEventListener('click', () => {
+          const nextQc = qcBtn.dataset.nextQc === 'true';
+          toggleSampleQC(sample.id, nextQc);
+        });
       }
     });
 
@@ -193,7 +201,7 @@ function _buildPopupContent(sample) {
   const minOpening = Number.parseFloat(sample.min_opening_mm);
   const minOpeningLabel = Number.isFinite(minOpening) && minOpening > 0 ? `${minOpening} mm` : '0.5 mm';
   const qcToggleHtml = _isAdminSignedIn() && sample.id
-    ? `<button class="btn btn-sm btn-outline-dark mt-1" onclick="toggleSampleQC(${JSON.stringify(sample.id)}, ${qcChecked ? 'false' : 'true'})">${qcChecked ? 'Mark as not QC checked' : 'Mark as QC checked'}</button>`
+    ? `<button type="button" class="btn btn-sm btn-outline-dark mt-1 qc-toggle-btn" data-next-qc="${qcChecked ? 'false' : 'true'}">${qcChecked ? 'Mark as not QC checked' : 'Mark as QC checked'}</button>`
     : '';
 
   const statsRow = (d10 != null && d50 != null && d84 != null)

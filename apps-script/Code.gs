@@ -68,7 +68,6 @@ function _toPublicSample(sample) {
   if (!_toBool(out.allow_public_acknowledgement)) {
     out.collector = '';
     out.institution = '';
-    out.contributor_id = '';
   }
   delete out.contributor_email;
   return out;
@@ -99,7 +98,7 @@ function _updateSampleQcStatus(sampleId, qcChecked, qcCheckedBy) {
 }
 
 function _isValidSample(sample) {
-  const requiredText = ['id', 'collector', 'river_name', 'date_collected', 'landform', 'surface_condition', 'phi_interval'];
+  const requiredText = ['id', 'river_name', 'date_collected', 'landform', 'surface_condition', 'phi_interval'];
   for (let i = 0; i < requiredText.length; i++) {
     const key = requiredText[i];
     if (!String(sample[key] || '').trim()) return false;

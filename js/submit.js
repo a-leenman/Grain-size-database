@@ -197,6 +197,7 @@ function _renderBinTable(interval, minOpeningMm) {
       const hasValue = input.value.trim() !== '';
       input.dataset.manual = hasValue ? 'true' : 'false';
       if (!hasValue) _recalculatePercentages();
+      _updatePreview();
     });
   });
   _recalculatePercentages();
