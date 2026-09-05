@@ -81,16 +81,16 @@ function doPost(e) {
       return _corsResponse({ status: 'error', message: 'Invalid sample data' });
     }
 
-    function _isValidSubmitToken(token) {
-      return !!SUBMIT_TOKEN && token === SUBMIT_TOKEN;
-    }
-
     _appendSample(sample);
     return _corsResponse({ status: 'ok', message: 'Sample saved.' });
 
   } catch (err) {
     return _corsResponse({ status: 'error', message: err.message });
   }
+}
+
+function _isValidSubmitToken(token) {
+  return !!SUBMIT_TOKEN && token === SUBMIT_TOKEN;
 }
 
 // ── Sheet helpers ─────────────────────────────────────────────────────────────

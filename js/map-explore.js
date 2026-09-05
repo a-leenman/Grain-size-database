@@ -39,7 +39,7 @@ function _initMap() {
 
   // Base tile layer (Esri World Imagery)
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
     maxZoom:     19,
   }).addTo(map);
 
@@ -173,9 +173,9 @@ function _buildPopupContent(sample) {
     other: 'Other',
   };
 
-  const landform  = landformMap[sample.landform]   || sample.landform   || '–';
-  const condition = conditionMap[sample.surface_condition] || sample.surface_condition || '–';
-  const date      = sample.date_collected || '–';
+  const landform  = _esc(landformMap[sample.landform]   || sample.landform   || '–');
+  const condition = _esc(conditionMap[sample.surface_condition] || sample.surface_condition || '–');
+  const date      = _esc(sample.date_collected || '–');
   const river     = _esc(sample.river_name || '–');
   const collector = _esc(sample.collector  || '–');
   const inst      = _esc(sample.institution || '');
