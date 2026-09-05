@@ -186,6 +186,7 @@ function getDx(cdf, pct) {
   for (let i = 0; i < pctFiner.length; i++) {
     if (pctFiner[i] >= pct) {
       if (i === 0) return parseFloat(mmValues[0].toFixed(precision));
+      if (pctFiner[i] === pctFiner[i - 1]) return parseFloat(mmValues[i].toFixed(precision));
       // Linear interpolation in log-mm space
       const logLo = Math.log(mmValues[i - 1]);
       const logHi = Math.log(mmValues[i]);

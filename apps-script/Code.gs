@@ -218,6 +218,7 @@ function _interpolateDx(mmVals, pctVals, pct) {
   for (let i = 0; i < pctVals.length; i++) {
     if (pctVals[i] >= pct) {
       if (i === 0) return mmVals[0].toFixed(DX_PRECISION);
+      if (pctVals[i] === pctVals[i - 1]) return mmVals[i].toFixed(DX_PRECISION);
       const logLo = Math.log(mmVals[i - 1]);
       const logHi = Math.log(mmVals[i]);
       const f = (pct - pctVals[i - 1]) / (pctVals[i] - pctVals[i - 1]);

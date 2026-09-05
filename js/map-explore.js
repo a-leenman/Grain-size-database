@@ -178,7 +178,7 @@ function _buildPopupContent(sample) {
   const inst      = _esc(sample.institution || '');
   const rawDoi    = normalizeSampleDOI(sample.paper_doi);
   const doi       = _esc(rawDoi);
-  const doiHref   = _esc(`https://doi.org/${rawDoi}`);
+  const doiHref   = rawDoi ? _esc(`https://doi.org/${rawDoi}`) : '';
   const notes     = _esc(sample.notes || '');
 
   const statsRow = (d10 != null && d50 != null && d84 != null)
