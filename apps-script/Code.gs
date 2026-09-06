@@ -22,9 +22,9 @@
  */
 
 // ── Configuration ──────────────────────────────────────────────────────────
-const SHEET_ID    = 'YOUR_GOOGLE_SHEET_ID_HERE';
-const SHEET_NAME  = 'Samples';   // Tab name inside the Google Sheet
-const ADMIN_QC_TOKEN = 'CHANGE_ME_ADMIN_QC_TOKEN';
+const SHEET_ID    = '16ZVZC2Zwicw17VRU9aESwP_m73DgQ0jV70ytmawMgNk';
+const SHEET_NAME  = 'Global_Surface_GSD';   // Tab name inside the Google Sheet
+const ADMIN_QC_TOKEN = 'alee139';
 // Decimal places used when writing Dx percentile statistics to the sheet.
 // Must match CONFIG.DX_PRECISION in js/config.js.
 const DX_PRECISION = 2;
