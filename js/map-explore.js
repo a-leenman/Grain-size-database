@@ -20,6 +20,7 @@ let markersLayer;         // FeatureGroup holding all sample markers
 let selectedSamples;      // Samples within the drawn area (or null = all)
 let activePopupCanvas;    // The canvas whose Chart lives in the open popup
 let adminToken = '';
+let basemapController = null;
 
 // ---------------------------------------------------------------------------
 // Initialisation
@@ -46,7 +47,8 @@ function _initMap() {
   });
 
   // Base tile layer (Esri World Imagery)
-  _addBasemapWithFallback(map);
+  basemapController = _addBasemapWithFallback(map, _getSelectedBasemapStyle());
+  _initBasemapSelector();
 
   // Layer for all sample markers
   markersLayer = L.featureGroup().addTo(map);
@@ -464,50 +466,128 @@ function _safeExternalUrl(value) {
   }
 }
 
-function _addBasemapWithFallback(targetMap) {
+function _addBasemapWithFallback(targetMap, initialStyle = 'satellite') {
   const FALLBACK_TILE_ERROR_THRESHOLD = 6;
-  const sources = [
-    {
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    },
-    {
-      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    },
-    {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    },
-  ];
-
-  let idx = 0;
-  let layer;
-  const mount = () => {
-    if (layer) targetMap.removeLayer(layer);
-    const src = sources[idx];
-    let tileErrors = 0;
-    let hasFallenBack = false;
-    layer = L.tileLayer(
-      src.url,
+  const styleSources = {
+    satellite: [
       {
-        attribution: src.attribution,
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
         maxZoom: 19,
       },
-    );
-    layer.on('tileerror', () => {
-      if (hasFallenBack) return;
-      tileErrors += 1;
-      if (tileErrors < FALLBACK_TILE_ERROR_THRESHOLD) return;
-      if (idx >= sources.length - 1) return;
-      hasFallenBack = true;
-      idx += 1;
-      mount();
-    });
-    layer.addTo(targetMap);
+      {
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+        maxZoom: 19,
+      },
+      {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      },
+    ],
+    streets: [
+      {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      },
+      {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19,
+      },
+      {
+        url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 20,
+      },
+    ],
+    terrain: [
+      {
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
+        maxZoom: 17,
+      },
+      {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+        attribution: 'Tiles &copy; Esri',
+        maxZoom: 19,
+      },
+      {
+        url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      },
+    ],
   };
 
-  mount();
+  let layer;
+  let currentStyle = _normalizeBasemapStyle(initialStyle);
+
+  const mountStyle = (styleName) => {
+    const sources = styleSources[styleName] || styleSources.satellite;
+    let idx = 0;
+
+    const mount = () => {
+      if (layer) targetMap.removeLayer(layer);
+      const src = sources[idx];
+      let tileErrors = 0;
+      let hasFallenBack = false;
+      layer = L.tileLayer(
+        src.url,
+        {
+          attribution: src.attribution,
+          maxZoom: src.maxZoom || 19,
+        },
+      );
+      layer.on('tileerror', () => {
+        if (hasFallenBack) return;
+        tileErrors += 1;
+        if (tileErrors < FALLBACK_TILE_ERROR_THRESHOLD) return;
+        if (idx >= sources.length - 1) return;
+        hasFallenBack = true;
+        idx += 1;
+        mount();
+      });
+      layer.addTo(targetMap);
+    };
+
+    mount();
+  };
+
+  mountStyle(currentStyle);
+
+  return {
+    setStyle(nextStyle) {
+      const normalized = _normalizeBasemapStyle(nextStyle);
+      if (normalized === currentStyle) return;
+      currentStyle = normalized;
+      mountStyle(currentStyle);
+    },
+    getStyle() {
+      return currentStyle;
+    },
+  };
+}
+
+function _initBasemapSelector() {
+  const selector = document.getElementById('basemap-style');
+  if (!selector) return;
+  selector.addEventListener('change', () => {
+    if (!basemapController) return;
+    basemapController.setStyle(selector.value);
+  });
+}
+
+function _getSelectedBasemapStyle() {
+  const selector = document.getElementById('basemap-style');
+  return selector?.value || 'satellite';
+}
+
+function _normalizeBasemapStyle(value) {
+  if (value === 'streets' || value === 'terrain') return value;
+  return 'satellite';
 }
 
 function _asBool(value) {
