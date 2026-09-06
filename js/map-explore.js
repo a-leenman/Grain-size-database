@@ -127,7 +127,7 @@ function _renderMarkers(samples) {
       fillOpacity: 0.85,
     });
 
-    marker.bindPopup(() => _buildPopupContent(sample), {
+    marker.bindPopup('', {
       maxWidth:  340,
       minWidth:  300,
       className: 'gsd-popup',
@@ -135,6 +135,7 @@ function _renderMarkers(samples) {
 
     // Initialise the mini CDF chart once the popup DOM is ready.
     marker.on('popupopen', (e) => {
+      e.popup.setContent(_buildPopupContent(sample));
       const popupEl = e.popup.getElement();
       const canvas = popupEl.querySelector('canvas.mini-cdf');
       if (canvas) {

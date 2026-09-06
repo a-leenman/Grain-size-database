@@ -396,7 +396,6 @@ function _toPublicSample(sample) {
   if (!isPublicContributor) {
     out.collector = '';
     out.institution = '';
-    out.contributor_id = '';
   }
   delete out.contributor_email;
   return out;

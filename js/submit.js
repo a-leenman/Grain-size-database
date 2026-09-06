@@ -316,8 +316,15 @@ function _initFormValidation() {
       if (exportBtn) {
         exportBtn.classList.remove('d-none');
         exportBtn.onclick = () => {
+          const publicSample = typeof _toPublicSample === 'function'
+            ? _toPublicSample(sample)
+            : (() => {
+                const clone = { ...(sample || {}) };
+                delete clone.contributor_email;
+                return clone;
+              })();
           downloadFile(
-            JSON.stringify({ samples: [sample] }, null, 2),
+            JSON.stringify({ samples: [publicSample] }, null, 2),
             `sample-${sample.id}.json`,
             'application/json',
           );
