@@ -505,6 +505,7 @@ function _addBasemapWithFallback(targetMap) {
   const mount = () => {
     if (layer) targetMap.removeLayer(layer);
     const src = sources[idx];
+    let hasFallenBack = false;
     layer = L.tileLayer(
       src.url,
       {
@@ -513,7 +514,9 @@ function _addBasemapWithFallback(targetMap) {
       },
     );
     layer.on('tileerror', () => {
+      if (hasFallenBack) return;
       if (idx >= sources.length - 1) return;
+      hasFallenBack = true;
       idx += 1;
       mount();
     });
