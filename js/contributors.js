@@ -41,7 +41,8 @@ function _collectContributors(samples) {
     if (!_asBool(sample?.allow_public_acknowledgement)) return;
     const name = String(sample?.collector || '').trim();
     const institution = String(sample?.institution || '').trim();
-    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase();
+    const contributorId = String(sample?.contributor_id || '').trim().toLowerCase()
+      || _contributorIdFromEmail(sample?.contributor_email);
     if (!name || !contributorId) { skipped += 1; return; }
     if (!outByKey.has(contributorId)) {
       outByKey.set(contributorId, { name, institution, sampleCount: 0 });
@@ -73,4 +74,15 @@ function _esc(str) {
   const d = document.createElement('div');
   d.textContent = str == null ? '' : String(str);
   return d.innerHTML;
+}
+
+function _contributorIdFromEmail(email) {
+  const value = String(email || '').trim().toLowerCase();
+  if (!value) return '';
+  let hash = 5381;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) + hash) + value.charCodeAt(i);
+    hash &= 0xffffffff;
+  }
+  return `contrib-${(hash >>> 0).toString(16)}`;
 }

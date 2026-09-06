@@ -464,6 +464,7 @@ function _safeExternalUrl(value) {
 }
 
 function _addBasemapWithFallback(targetMap) {
+  const FALLBACK_TILE_ERROR_THRESHOLD = 6;
   const sources = [
     {
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -484,6 +485,7 @@ function _addBasemapWithFallback(targetMap) {
   const mount = () => {
     if (layer) targetMap.removeLayer(layer);
     const src = sources[idx];
+    let tileErrors = 0;
     let hasFallenBack = false;
     layer = L.tileLayer(
       src.url,
@@ -494,6 +496,8 @@ function _addBasemapWithFallback(targetMap) {
     );
     layer.on('tileerror', () => {
       if (hasFallenBack) return;
+      tileErrors += 1;
+      if (tileErrors < FALLBACK_TILE_ERROR_THRESHOLD) return;
       if (idx >= sources.length - 1) return;
       hasFallenBack = true;
       idx += 1;
