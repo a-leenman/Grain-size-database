@@ -13,7 +13,7 @@ const CONFIG = {
   // Set to null to use localStorage only (demo / offline mode).
   // Example: 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec'
   // -------------------------------------------------------------------------
-  API_URL: null,
+  API_URL: https://script.google.com/macros/s/AKfycbx_6diCFceXlkybRoUthfOzm6iOMdE0Fo7O-GiC-pA7_gFuvZ3HqHVNmDnjAsAC8aA4/exec,
 
   // -------------------------------------------------------------------------
   // Path (or URL) to the JSON file containing pre-loaded sample data.
