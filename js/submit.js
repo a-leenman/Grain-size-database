@@ -485,22 +485,40 @@ function _contributorIdFromEmail(email) {
 }
 
 function _addBasemapWithFallback(targetMap) {
-  let switched = false;
-  const esri = L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+  const sources = [
     {
+      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-      maxZoom: 19,
     },
-  );
-  esri.on('tileerror', () => {
-    if (switched) return;
-    switched = true;
-    targetMap.removeLayer(esri);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    {
+      url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+    },
+    {
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(targetMap);
-  });
-  esri.addTo(targetMap);
+    },
+  ];
+
+  let idx = 0;
+  let layer;
+  const mount = () => {
+    if (layer) targetMap.removeLayer(layer);
+    const src = sources[idx];
+    layer = L.tileLayer(
+      src.url,
+      {
+        attribution: src.attribution,
+        maxZoom: 19,
+      },
+    );
+    layer.on('tileerror', () => {
+      if (idx >= sources.length - 1) return;
+      idx += 1;
+      mount();
+    });
+    layer.addTo(targetMap);
+  };
+
+  mount();
 }

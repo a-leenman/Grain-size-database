@@ -8,7 +8,7 @@ A crowd-sourced, browser-based tool for uploading, geotagging, and exploring riv
 
 | Feature | Details |
 |---|---|
-| **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. Esri World Imagery is used with fallback to OpenStreetMap if imagery tiles fail. |
+| **Interactive map** | Leaflet map showing all samples as coloured markers (blue = fine, red = coarse). Popup for each sample shows metadata + CDF chart. Esri World Imagery is used with multi-host fallback, then OpenStreetMap if imagery tiles fail. |
 | **Submit form** | Click the map or type coordinates; fill in metadata (river, date, landform, surface condition, paper DOI, notes, photo URLs), and choose whether your name+institution can be publicly acknowledged; choose full-phi or half-phi bins plus a minimum measured opening size (2/4/8 mm); enter grain counts and optional percentages (auto-filled from counts if left blank). |
 | **Contributors page** | Lists contributor names, institutions, and total contributed sample counts (grouped by contributor email) only for submissions where contributors opted in to public acknowledgement. |
 | **QC status** | Samples can be marked as QC-checked by an admin; QC status is shown in map popups and included in exports. |
