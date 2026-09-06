@@ -52,6 +52,7 @@ function _normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+// Keep this algorithm mirrored with js/contributor-id.js::contributorIdFromEmail.
 function _contributorIdFromEmail(email) {
   const value = _normalizeEmail(email);
   if (!value) return '';

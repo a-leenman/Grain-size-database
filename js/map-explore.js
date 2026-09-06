@@ -206,7 +206,7 @@ function _buildPopupContent(sample) {
     ? ` (${[qcBy, qcAt].filter(Boolean).join(' • ')})`
     : '';
   const minOpening = Number.parseFloat(sample.min_opening_mm);
-  const minOpeningLabel = Number.isFinite(minOpening) && minOpening > 0 ? `${minOpening} mm` : '0.5 mm';
+  const minOpeningLabel = Number.isFinite(minOpening) && minOpening > 0 ? `${minOpening} mm` : '2 mm';
   const qcToggleHtml = _isAdminSignedIn() && sample.id
     ? `<button type="button" class="btn btn-sm btn-outline-dark mt-1 qc-toggle-btn" data-next-qc="${qcChecked ? 'false' : 'true'}">${qcChecked ? 'Mark as not QC checked' : 'Mark as QC checked'}</button>`
     : '';
