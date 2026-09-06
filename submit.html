@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Sample – Riverbed Grain Size Database</title>
+
+  <!-- Bootstrap 5 -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+        crossorigin="anonymous" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+
+  <!-- Custom -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body class="page-submit">
+
+  <!-- ── Navbar ────────────────────────────────────────────────────────── -->
+  <nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="index.html">
+        🪨 Riverbed Grain Size Database
+      </a>
+      <button class="navbar-toggler" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMain"
+              aria-controls="navMain" aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="index.html">🗺 Explore</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="submit.html">📤 Submit Sample</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="contributors.html">👥 Contributors</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Page content ──────────────────────────────────────────────────── -->
+  <div class="content-wrapper">
+
+    <h1 class="h4 mb-3 text-gsd-blue fw-bold">Submit a Grain Size Sample</h1>
+    <p class="text-muted mb-3">
+      Use this form to contribute a new Wolman pebble-count sample to the database.
+      All fields marked <span class="text-danger">*</span> are required.
+    </p>
+
+    <!-- Alert container -->
+    <div id="alert-container" role="alert"></div>
+
+    <form id="submit-form" novalidate>
+
+      <!-- ═══ Step 1: Location ════════════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="step-badge">1</span>
+          <h5>Sample Location</h5>
+        </div>
+        <div class="section-body">
+          <p class="text-muted small mb-2">
+            Click anywhere on the map to place a marker, or type the coordinates
+            directly into the boxes below. You can drag the marker to fine-tune
+            the position.
+          </p>
+          <div class="mb-2">
+            <label for="submit-basemap-style" class="form-label fw-semibold mb-1">Basemap style</label>
+            <select id="submit-basemap-style" class="form-select form-select-sm" style="max-width: 220px;">
+              <option value="satellite" selected>Satellite</option>
+              <option value="streets">Streets</option>
+              <option value="terrain">Terrain</option>
+            </select>
+          </div>
+          <div id="submit-map" class="mb-3" aria-label="Click map to set sample location"></div>
+
+          <div class="row g-2">
+            <div class="col-sm-4">
+              <label for="lat" class="form-label fw-semibold">
+                Latitude <span class="text-danger">*</span>
+              </label>
+              <input type="number" id="lat" name="lat"
+                     class="form-control" step="any" min="-90" max="90"
+                     placeholder="e.g. 51.5074" required
+                     aria-describedby="latHelp" />
+              <div id="latHelp" class="form-text">Decimal degrees (WGS 84)</div>
+              <div class="invalid-feedback">Please enter a valid latitude (−90 to 90).</div>
+            </div>
+            <div class="col-sm-4">
+              <label for="lng" class="form-label fw-semibold">
+                Longitude <span class="text-danger">*</span>
+              </label>
+              <input type="number" id="lng" name="lng"
+                     class="form-control" step="any" min="-180" max="180"
+                     placeholder="e.g. −0.1278" required />
+              <div class="invalid-feedback">Please enter a valid longitude (−180 to 180).</div>
+            </div>
+            <div class="col-sm-4">
+              <label for="loc_description" class="form-label fw-semibold">
+                Location description
+              </label>
+              <input type="text" id="loc_description" name="loc_description"
+                     class="form-control"
+                     placeholder="e.g. Upstream of Monmouth Bridge" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 2: Metadata ════════════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="step-badge">2</span>
+          <h5>Sample Metadata</h5>
+        </div>
+        <div class="section-body">
+          <div class="row g-3">
+
+            <!-- River name -->
+            <div class="col-sm-6">
+              <label for="river_name" class="form-label fw-semibold">
+                River name <span class="text-danger">*</span>
+              </label>
+              <input type="text" id="river_name" name="river_name"
+                     class="form-control" placeholder="e.g. River Wye"
+                     required maxlength="120" />
+              <div class="invalid-feedback">Please enter the river name.</div>
+            </div>
+
+            <!-- Date of collection -->
+            <div class="col-sm-3">
+              <label for="date_collected" class="form-label fw-semibold">
+                Date collected <span class="text-danger">*</span>
+              </label>
+              <input type="date" id="date_collected" name="date_collected"
+                     class="form-control" required />
+              <div class="invalid-feedback">Please enter the collection date.</div>
+            </div>
+
+            <!-- Phi interval – placed here for logical flow but handled in step 3 -->
+
+            <!-- Collector name -->
+            <div class="col-sm-6">
+              <label for="collector" class="form-label fw-semibold">
+                Collector name(s) <span class="text-danger">*</span>
+              </label>
+              <input type="text" id="collector" name="collector"
+                     class="form-control"
+                     placeholder="e.g. Jane Smith, Tom Jones"
+                     required maxlength="200" />
+              <div class="invalid-feedback">Please enter the collector's name.</div>
+            </div>
+
+            <!-- Institution -->
+            <div class="col-sm-6">
+              <label for="institution" class="form-label fw-semibold">
+                Institution / affiliation
+              </label>
+              <input type="text" id="institution" name="institution"
+                     class="form-control"
+                     placeholder="e.g. University of Bristol"
+                     maxlength="200" />
+            </div>
+
+            <div class="col-sm-6">
+              <label for="contributor_email" class="form-label fw-semibold">
+                Contributor email <span class="text-danger">*</span>
+              </label>
+              <input type="email" id="contributor_email" name="contributor_email"
+                     class="form-control"
+                     placeholder="name@example.edu"
+                     required maxlength="254" />
+              <div class="invalid-feedback">Please enter a valid contributor email.</div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="allow_public_acknowledgement" name="allow_public_acknowledgement">
+                <label class="form-check-label" for="allow_public_acknowledgement">
+                  I am happy for my name and institution to be shown publicly on the Contributors page.
+                </label>
+              </div>
+              <div class="form-text">
+                Leave unchecked if you prefer not to be acknowledged publicly.
+              </div>
+            </div>
+
+            <!-- Paper DOI -->
+            <div class="col-sm-6">
+              <label for="paper_doi" class="form-label fw-semibold">
+                Paper DOI
+                <span class="text-muted fw-normal">(optional)</span>
+              </label>
+              <input type="text" id="paper_doi" name="paper_doi"
+                     class="form-control"
+                     placeholder="e.g. 10.1000/xyz123"
+                     maxlength="255" />
+              <div class="form-text">
+                If this sample has been published, add the DOI so it can be included in bibliography downloads.
+              </div>
+            </div>
+
+            <!-- Landform -->
+            <div class="col-sm-6">
+              <label for="landform" class="form-label fw-semibold">
+                Landform <span class="text-danger">*</span>
+              </label>
+              <select id="landform" name="landform" class="form-select" required>
+                <option value="" disabled selected>Select…</option>
+                <option value="pool">Pool</option>
+                <option value="riffle">Riffle</option>
+                <option value="bar_head">Bar head</option>
+                <option value="bar_top">Bar top</option>
+                <option value="bar_tail">Bar tail</option>
+                <option value="step">Step (step-pool)</option>
+                <option value="glide">Glide / run</option>
+                <option value="other">Other</option>
+              </select>
+              <div class="invalid-feedback">Please select the landform type.</div>
+            </div>
+
+            <!-- Surface condition -->
+            <div class="col-sm-6">
+              <label for="surface_condition" class="form-label fw-semibold">
+                Surface condition <span class="text-danger">*</span>
+              </label>
+              <select id="surface_condition" name="surface_condition"
+                      class="form-select" required>
+                <option value="" disabled selected>Select…</option>
+                <option value="underwater">Underwater</option>
+                <option value="lightly_imbricated">Lightly imbricated</option>
+                <option value="heavily_imbricated">Heavily imbricated</option>
+                <option value="recently_reworked">Recently reworked</option>
+                <option value="other">Other</option>
+              </select>
+              <div class="invalid-feedback">Please select the surface condition.</div>
+            </div>
+
+            <!-- Notes -->
+            <div class="col-12">
+              <label for="notes" class="form-label fw-semibold">
+                Additional notes
+              </label>
+              <textarea id="notes" name="notes" class="form-control" rows="2"
+                        placeholder="Any additional observations about the site or survey…"
+                        maxlength="2000"></textarea>
+            </div>
+
+            <!-- Photo URLs -->
+            <div class="col-12">
+              <label for="photo_urls" class="form-label fw-semibold">
+                Photo URL(s)
+                <span class="text-muted fw-normal">(optional – one URL per line)</span>
+              </label>
+              <textarea id="photo_urls" name="photo_urls" rows="2"
+                        class="form-control"
+                        placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"></textarea>
+              <div class="form-text">
+                Upload your photos to a cloud service (e.g. Google Drive, OneDrive) and
+                paste the shareable URLs here.
+              </div>
+            </div>
+
+          </div><!-- /.row -->
+        </div><!-- /.section-body -->
+      </div><!-- /.section-card (step 2) -->
+
+      <!-- ═══ Step 3: Phi interval ════════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="step-badge">3</span>
+          <h5>Size-Class Interval</h5>
+        </div>
+        <div class="section-body">
+          <p class="text-muted small mb-2">
+            Choose whether your data uses <strong>full-phi</strong> (1 φ) or
+            <strong>half-phi</strong> (½ φ) size-class intervals.
+            Choose the minimum opening size used in your measurements.
+            The grain-size entry table in Step 4 updates automatically.
+          </p>
+          <div class="d-flex gap-4">
+            <div class="form-check">
+              <input class="form-check-input" type="radio"
+                     name="phi_interval" id="phi-full" value="full" checked />
+              <label class="form-check-label" for="phi-full">
+                <strong>Full phi (1 φ)</strong>
+                <span class="d-block text-muted small">
+                  e.g. 1–2 mm, 2–4 mm, 4–8 mm … (11 bins)
+                </span>
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio"
+                     name="phi_interval" id="phi-half" value="half" />
+              <label class="form-check-label" for="phi-half">
+                <strong>Half phi (½ φ)</strong>
+                <span class="d-block text-muted small">
+                  e.g. 1–1.41 mm, 1.41–2 mm, 2–2.83 mm … (20 bins)
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="mt-3" style="max-width: 320px;">
+            <label for="min_opening_mm" class="form-label fw-semibold">
+              Minimum opening size measured (mm) <span class="text-danger">*</span>
+            </label>
+            <select id="min_opening_mm" name="min_opening_mm" class="form-select" required>
+              <option value="2" selected>2 mm</option>
+              <option value="4">4 mm</option>
+              <option value="8">8 mm</option>
+            </select>
+            <div class="form-text">Used to predefine the size-class bins for this sample.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 4: Grain size data ═════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="step-badge">4</span>
+          <h5>Grain Size Count Data</h5>
+        </div>
+        <div class="section-body">
+          <p class="text-muted small mb-2">
+            Enter the <strong>grain count</strong> (number of clasts) measured in each
+            size class. You can also enter percentages manually.
+            If percentage fields are left empty, they auto-fill from grain counts.
+            The CDF preview (Step 5) updates automatically as you type.
+          </p>
+          <div class="table-scroll">
+            <table id="bin-table" class="table table-sm table-hover mb-0">
+              <thead>
+                <tr>
+                  <th scope="col">Size class</th>
+                  <th scope="col" style="width:130px;">Grain count</th>
+                  <th scope="col" style="width:130px;">Percent (%)</th>
+                </tr>
+              </thead>
+              <tbody id="bin-table-body">
+                <!-- Populated dynamically by submit.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ Step 5: CDF preview ══════════════════════════════════════════ -->
+      <div class="section-card">
+        <div class="section-header">
+          <span class="step-badge">5</span>
+          <h5>CDF Preview</h5>
+        </div>
+        <div class="section-body">
+          <div id="preview-section" class="d-none">
+            <p id="preview-stats" class="mb-2 small"></p>
+            <div id="preview-canvas-wrapper">
+              <canvas id="preview-canvas" aria-label="Cumulative grain size distribution chart"></canvas>
+            </div>
+          </div>
+          <p id="preview-placeholder" class="text-muted small mb-0">
+            Enter some grain counts in Step 4 to see the CDF here.
+          </p>
+        </div>
+      </div>
+
+      <!-- ═══ Submit ════════════════════════════════════════════════════════ -->
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <button type="submit" id="submit-btn" class="btn btn-primary">
+          Submit Sample
+        </button>
+        <button type="button" id="export-btn" class="btn btn-outline-secondary d-none">
+          💾 Download as JSON (manual upload)
+        </button>
+        <span class="text-muted small">
+          By submitting you agree that your data will be shared publicly under
+          <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>.
+        </span>
+      </div>
+
+    </form><!-- /#submit-form -->
+  </div><!-- /.content-wrapper -->
+
+
+  <!-- ── Scripts ───────────────────────────────────────────────────────── -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+          crossorigin="anonymous"></script>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLcE="
+          crossorigin=""></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"
+          integrity="sha256-3a5OBlABrkRX1CWkWyZP8AUO+b/Yx0WXSOH9JEijGZM="
+          crossorigin="anonymous"></script>
+
+  <!-- App scripts (order matters) -->
+  <script src="js/config.js"></script>
+  <script src="js/contributor-id.js"></script>
+  <script src="js/bins.js"></script>
+  <script src="js/cdf.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/submit.js"></script>
+  <script src="js/welcome.js"></script>
+</body>
+</html>
